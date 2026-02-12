@@ -45,3 +45,6 @@ integrations = ["javascript_database:1.0.0"]
 
 [userenv.shared]
 NOTION_SCHEDULE_DB_ID = "7bdcf9acc8594ae9a8bb9a834155cddd"
+NOTION_REQUEST_DB_ID = "fb55ece0fc6646febf66c6492762a508"
+NOTION_PRICING_DB_ID = "56c46f6a802d4d449cb3c7bed9f05b69"
+NOTION_QUOTES_DB_ID = "eb9f26a4c70a4d33a1de5f98967ec0dd"

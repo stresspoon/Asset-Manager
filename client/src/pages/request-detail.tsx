@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calculator, Building2, CreditCard, FileBarChart, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calculator, Building2, CreditCard, FileBarChart, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 import { formatDate, formatCurrency, getStatusColor, getTierColor, getTierLabel } from "@/lib/format";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -161,6 +161,39 @@ export default function RequestDetail() {
             <SelectItem value="완료">완료</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-1.5" data-testid="status-form-completed">
+          {request.formCompleted ? (
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          ) : (
+            <XCircle className="h-4 w-4 text-muted-foreground/40" />
+          )}
+          <span className={`text-xs font-medium ${request.formCompleted ? "text-foreground" : "text-muted-foreground"}`}>
+            폼 작성 완료
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5" data-testid="status-reservation-completed">
+          {request.reservationCompleted ? (
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          ) : (
+            <XCircle className="h-4 w-4 text-muted-foreground/40" />
+          )}
+          <span className={`text-xs font-medium ${request.reservationCompleted ? "text-foreground" : "text-muted-foreground"}`}>
+            예약 완료
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5" data-testid="status-submission-complete">
+          {request.submissionComplete ? (
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          ) : (
+            <XCircle className="h-4 w-4 text-muted-foreground/40" />
+          )}
+          <span className={`text-xs font-medium ${request.submissionComplete ? "text-foreground" : "text-muted-foreground"}`}>
+            접수 완료
+          </span>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

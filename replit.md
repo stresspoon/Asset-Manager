@@ -60,11 +60,15 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### Notion API (`@notionhq/client`)
-- **Purpose:** Primary data source for consultation requests and schedules
+- **Purpose:** Primary data source for consultation requests, schedules, pricing, and quote sync
 - **Environment variables required:**
   - `NOTION_API_KEY` — Notion integration API token
-  - `NOTION_SCHEDULE_DB_ID` — Notion database ID for consultation schedules
-- **Notion databases referenced:** Consultation requests DB, Consultation schedules DB, Service pricing DB, Quotes DB (see attached specs for DB IDs)
+  - `NOTION_REQUEST_DB_ID` — 상담 신청 DB (`fb55ece0fc6646febf66c6492762a508`)
+  - `NOTION_SCHEDULE_DB_ID` — 상담 일정 DB (`7bdcf9acc8594ae9a8bb9a834155cddd`)
+  - `NOTION_PRICING_DB_ID` — 요금 기준표 DB (`56c46f6a802d4d449cb3c7bed9f05b69`)
+  - `NOTION_QUOTES_DB_ID` — 견적서 DB (`eb9f26a4c70a4d33a1de5f98967ec0dd`)
+- **Data flow:** Requests/Schedules/Pricing are read from Notion; Quotes are written to both PostgreSQL and Notion
+- **Fallback:** If Notion DBs are not accessible, app falls back to sample data (requests) or PostgreSQL seed (pricing)
 
 ### PostgreSQL (via `pg` + Drizzle ORM)
 - **Purpose:** Stores quotes and service pricing data generated/managed by the web app

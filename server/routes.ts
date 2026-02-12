@@ -129,7 +129,22 @@ const sampleRequests: NotionConsultationRequest[] = [
   },
 ];
 
-let requestsCache = [...sampleRequests];
+async function getRequestsData(): Promise<NotionConsultationRequest[]> {
+  const notionRequests = await notion.getRequests();
+  if (notionRequests.length > 0) {
+    return notionRequests;
+  }
+  return sampleRequests;
+}
+
+async function getRequestByIdData(id: string): Promise<NotionConsultationRequest | null> {
+  if (id.startsWith("sample-")) {
+    return sampleRequests.find((r) => r.id === id) || null;
+  }
+  const request = await notion.getRequestById(id);
+  if (request) return request;
+  return sampleRequests.find((r) => r.id === id) || null;
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -140,9 +155,10 @@ export async function registerRoutes(
 
   app.get("/api/dashboard/stats", async (_req, res) => {
     try {
-      const newRequests = requestsCache.filter((r) => r.consultationStatus === "신규접수").length;
-      const inProgress = requestsCache.filter((r) => r.consultationStatus === "상담중").length;
-      const completed = requestsCache.filter((r) => r.consultationStatus === "완료").length;
+      const requests = await getRequestsData();
+      const newRequests = requests.filter((r) => r.consultationStatus === "신규접수").length;
+      const inProgress = requests.filter((r) => r.consultationStatus === "상담중").length;
+      const completed = requests.filter((r) => r.consultationStatus === "완료").length;
 
       let todaySchedules = 0;
       try {
@@ -158,13 +174,14 @@ export async function registerRoutes(
 
   app.get("/api/requests", async (req, res) => {
     try {
+      const requests = await getRequestsData();
       if (req.query[0] === "recent") {
-        const sorted = [...requestsCache].sort(
+        const sorted = [...requests].sort(
           (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
         );
         return res.json(sorted.slice(0, 5));
       }
-      res.json(requestsCache);
+      res.json(requests);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -172,7 +189,8 @@ export async function registerRoutes(
 
   app.get("/api/requests/recent", async (_req, res) => {
     try {
-      const sorted = [...requestsCache].sort(
+      const requests = await getRequestsData();
+      const sorted = [...requests].sort(
         (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
       );
       res.json(sorted.slice(0, 5));
@@ -183,7 +201,7 @@ export async function registerRoutes(
 
   app.get("/api/requests/:id", async (req, res) => {
     try {
-      const request = requestsCache.find((r) => r.id === req.params.id);
+      const request = await getRequestByIdData(req.params.id);
       if (!request) {
         return res.status(404).json({ message: "Request not found" });
       }
@@ -196,11 +214,18 @@ export async function registerRoutes(
   app.patch("/api/requests/:id/status", async (req, res) => {
     try {
       const { status } = req.body;
-      const idx = requestsCache.findIndex((r) => r.id === req.params.id);
-      if (idx === -1) {
-        return res.status(404).json({ message: "Request not found" });
+      if (req.params.id.startsWith("sample-")) {
+        const idx = sampleRequests.findIndex((r) => r.id === req.params.id);
+        if (idx === -1) {
+          return res.status(404).json({ message: "Request not found" });
+        }
+        sampleRequests[idx] = { ...sampleRequests[idx], consultationStatus: status };
+        return res.json({ success: true });
       }
-      requestsCache[idx] = { ...requestsCache[idx], consultationStatus: status };
+      const success = await notion.updateRequestStatus(req.params.id, status);
+      if (!success) {
+        return res.status(500).json({ message: "Failed to update status" });
+      }
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -263,6 +288,19 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/pricing", async (_req, res) => {
+    try {
+      const notionPricing = await notion.getPricing();
+      if (notionPricing.length > 0) {
+        return res.json(notionPricing);
+      }
+      const dbPricing = await storage.getServicePricing();
+      res.json(dbPricing);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/quotes", async (_req, res) => {
     try {
       const allQuotes = await storage.getQuotes();
@@ -286,7 +324,7 @@ export async function registerRoutes(
 
   app.get("/api/quotes/calculate/:requestId", async (req, res) => {
     try {
-      const request = requestsCache.find((r) => r.id === req.params.requestId);
+      const request = await getRequestByIdData(req.params.requestId);
       if (!request) {
         return res.status(404).json({ message: "Request not found" });
       }
@@ -322,6 +360,31 @@ export async function registerRoutes(
     try {
       const data = insertQuoteSchema.parse(req.body);
       const quote = await storage.createQuote(data);
+
+      notion.createQuoteInNotion({
+        title: data.title,
+        recommendedTier: data.recommendedTier,
+        baseMonthlyFee: data.baseMonthlyFee,
+        onestopDiscount: data.onestopDiscount || false,
+        discountRate: data.discountRate || 0,
+        finalMonthlyFee: data.finalMonthlyFee,
+        additionalNotes: data.additionalNotes || undefined,
+        calculationBasis: data.calculationBasis || undefined,
+        requestId: data.notionRequestId || undefined,
+      }).catch((err) => {
+        console.error("Failed to sync quote to Notion:", err);
+      });
+
+      if (data.notionRequestId && !data.notionRequestId.startsWith("sample-")) {
+        const requests = await getRequestsData();
+        const request = requests.find((r) => r.id === data.notionRequestId);
+        if (request?.scheduleId) {
+          notion.updateScheduleQuoteGenerated(request.scheduleId, true).catch((err) => {
+            console.error("Failed to update schedule quote status:", err);
+          });
+        }
+      }
+
       res.json(quote);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -340,9 +403,10 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/notion/debug", async (_req, res) => {
+  app.get("/api/notion/debug", async (req, res) => {
     try {
-      const props = await notion.discoverDatabaseProperties();
+      const dbId = req.query.db as string | undefined;
+      const props = await notion.discoverDatabaseProperties(dbId);
       res.json(props);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
