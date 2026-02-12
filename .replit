@@ -40,3 +40,8 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_database:1.0.0"]
+
+[userenv]
+
+[userenv.shared]
+NOTION_SCHEDULE_DB_ID = "7bdcf9acc8594ae9a8bb9a834155cddd"
