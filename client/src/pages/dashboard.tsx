@@ -2,37 +2,67 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Users, CheckCircle, CalendarDays, ArrowRight } from "lucide-react";
+import { FileText, Users, CheckCircle, CalendarDays, ArrowRight, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { formatDate, formatDateTime, getStatusColor } from "@/lib/format";
 import type { DashboardStats, NotionConsultationRequest, NotionConsultationSchedule } from "@shared/schema";
 
-function StatCard({ title, value, icon: Icon, color, loading }: {
+const statConfigs = [
+  {
+    key: "newRequests" as const,
+    title: "신규접수",
+    icon: FileText,
+    gradient: "from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700",
+    iconBg: "bg-blue-400/30",
+  },
+  {
+    key: "inProgress" as const,
+    title: "상담중",
+    icon: Users,
+    gradient: "from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600",
+    iconBg: "bg-amber-400/30",
+  },
+  {
+    key: "completed" as const,
+    title: "완료",
+    icon: CheckCircle,
+    gradient: "from-emerald-500 to-teal-500 dark:from-emerald-600 dark:to-teal-600",
+    iconBg: "bg-emerald-400/30",
+  },
+  {
+    key: "todaySchedules" as const,
+    title: "오늘 예정",
+    icon: CalendarDays,
+    gradient: "from-violet-500 to-purple-500 dark:from-violet-600 dark:to-purple-600",
+    iconBg: "bg-violet-400/30",
+  },
+];
+
+function StatCard({ title, value, icon: Icon, gradient, iconBg, loading }: {
   title: string;
   value: number;
   icon: typeof FileText;
-  color: string;
+  gradient: string;
+  iconBg: string;
   loading: boolean;
 }) {
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground font-medium">{title}</span>
-            {loading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <span className="text-2xl font-bold" data-testid={`text-stat-${title}`}>{value}</span>
-            )}
-          </div>
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${color}`}>
-            <Icon className="h-5 w-5" />
-          </div>
+    <div className={`rounded-md bg-gradient-to-br ${gradient} p-4 text-white`} data-testid={`card-stat-${title}`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-white/80" data-testid={`text-stat-label-${title}`}>{title}</span>
+          {loading ? (
+            <div className="h-8 w-12 rounded bg-white/20 animate-pulse" />
+          ) : (
+            <span className="text-2xl font-bold" data-testid={`text-stat-${title}`}>{value}</span>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${iconBg}`}>
+          <Icon className="h-5 w-5 text-white" />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -51,46 +81,43 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-xl font-bold" data-testid="text-page-title">대시보드</h1>
-        <p className="text-sm text-muted-foreground mt-1">경리아웃소싱 상담 관리 현황을 한눈에 확인하세요.</p>
+      <div className="rounded-md bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-800 dark:via-blue-800 dark:to-cyan-700 p-6 text-white">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-xl font-bold" data-testid="text-page-title">
+              경리아웃소싱 상담 관리
+            </h1>
+            <p className="text-sm text-white/80 max-w-lg">
+              천지세무법인 경리아웃소싱 상담 현황을 한눈에 확인하고 효율적으로 관리하세요.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-white/60" />
+            <span className="text-sm text-white/70 font-medium" data-testid="text-total-count">
+              총 {stats ? stats.newRequests + stats.inProgress + stats.completed : 0}건 관리 중
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="신규접수"
-          value={stats?.newRequests ?? 0}
-          icon={FileText}
-          color="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-          loading={statsLoading}
-        />
-        <StatCard
-          title="상담중"
-          value={stats?.inProgress ?? 0}
-          icon={Users}
-          color="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
-          loading={statsLoading}
-        />
-        <StatCard
-          title="완료"
-          value={stats?.completed ?? 0}
-          icon={CheckCircle}
-          color="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
-          loading={statsLoading}
-        />
-        <StatCard
-          title="오늘 예정 상담"
-          value={stats?.todaySchedules ?? 0}
-          icon={CalendarDays}
-          color="bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
-          loading={statsLoading}
-        />
+        {statConfigs.map((config) => (
+          <StatCard
+            key={config.key}
+            title={config.title}
+            value={stats?.[config.key] ?? 0}
+            icon={config.icon}
+            gradient={config.gradient}
+            iconBg={config.iconBg}
+            loading={statsLoading}
+          />
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
-            <CardTitle className="text-base font-semibold">최근 접수</CardTitle>
+            <CardTitle className="text-sm font-semibold">최근 접수</CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/requests" data-testid="link-view-all-requests">
                 전체 보기
@@ -135,7 +162,7 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
-            <CardTitle className="text-base font-semibold">오늘의 일정</CardTitle>
+            <CardTitle className="text-sm font-semibold">오늘의 일정</CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/schedules" data-testid="link-view-all-schedules">
                 전체 보기

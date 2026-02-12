@@ -1,0 +1,86 @@
+개발자에게 전달할 변경사항을 정리해 드리겠습니다.
+
+---
+
+### 🔄 명세서 변경사항 요약 (개발자 전달용)
+
+---
+
+### 1. 섹션 1.5 — Notion DB 연동 정보 추가
+
+기존에 상담 일정 DB ID만 있었는데, **4개 DB 전체 연동 정보**가 추가되었습니다.
+
+| DB | Notion 필드명 (실제) | 비고 |
+| --- | --- | --- |
+| 상담 신청 DB | [경리아웃소싱 상담 신청 대시보드](https://www.notion.so/403bc887855d476e87c171b2a166d0bd/ds/6187989cb4974b7a86daa484008629df?db=fb55ece0fc6646febf66c6492762a508&pvs=21) | **신규 추가** |
+| 상담 일정 DB | [상담 일정](https://www.notion.so/403bc887855d476e87c171b2a166d0bd/ds/bdb893f165404a77be248696a40f3745?db=7bdcf9acc8594ae9a8bb9a834155cddd&pvs=21) | 기존 (DB ID: `7bdcf9acc8594ae9a8bb9a834155cddd`) |
+| 💰 요금 기준표 DB | [요금 기준표](https://www.notion.so/403bc887855d476e87c171b2a166d0bd/ds/153e0381e69a4e66af100962d9311f09?db=56c46f6a802d4d449cb3c7bed9f05b69&pvs=21) | **🆕 신규 생성** |
+| 📝 견적서 DB | [견적서](https://www.notion.so/403bc887855d476e87c171b2a166d0bd/ds/a59a79efee5a4930b21a97ac1f1624bc?db=eb9f26a4c70a4d33a1de5f98967ec0dd&pvs=21) | **🆕 신규 생성** |
+
+---
+
+### 2. 상담 신청 DB — 신규 필드 7개 추가 (노란색 행)
+
+명세서 2.1 테이블에서 `color="yellow_bg"` 행이 모두 새로 추가된 필드입니다.
+
+| Notion 필드명 | 영문 코드 | 타입 | 옵션값 |
+| --- | --- | --- | --- |
+| `카드 사용 건수 (월)` | `card_usage_count` | Select | `50건 이하` · `51~150건` · `151~400건` · `401건 이상` |
+| `카드 개수` | `card_count` | Number | 사용 중인 법인/사업용 카드 수 |
+| `세금계산서 발행 건수 (월)` | `tax_invoice_count` | Select | `5건 이하` · `6~20건` · `21~60건` · `61건 이상` |
+| `연매출 규모` | `annual_revenue` | Select | `10억 이하` · `10억~50억` · `50억~100억` · `100억 이상` |
+| `폼 작성 완료 여부` | `form_completed` | Checkbox | 폼 제출 시 자동 `true` |
+| `예약 완료 여부` | `reservation_completed` | Checkbox | 캘린더 예약 시 자동 `true` |
+| `접수 완료 여부` | `submission_complete` | Formula | `form_completed AND reservation_completed` |
+
+> **기존 데이터 처리 완료**: 기존 3건 모두 `폼 작성 완료 여부` = ✅, `예약 완료 여부` = ✅ 설정됨
+> 
+
+---
+
+### 3. 상담 일정 DB — 신규 필드 2개 추가
+
+| Notion 필드명 | 영문 코드 | 타입 | 설명 |
+| --- | --- | --- | --- |
+| `상담 내용 메모` | `consultation_notes` | Text | 관리자가 상담 중/후 작성하는 상세 메모 |
+| `견적 산출 여부` | `quote_generated` | Checkbox | 견적 산출 완료 시 `true` |
+
+---
+
+### 4. 🆕 신규 DB — 요금 기준표 (service_pricing)
+
+4개 등급 데이터가 이미 입력되어 있습니다.
+
+| 서비스 등급 | 등급 코드 | 월 기본료 | 매칭 조건 | 대상 연매출 |
+| --- | --- | --- | --- | --- |
+| LITE (실속형) | `LITE` | 400,000원 | 월 거래 50건↓, 세금계산서 5건↓ | ~10억 |
+| BASIC (일반형) | `BASIC` | 800,000원~ | 월 거래 51~150건, 세금계산서 6~20건 | ~50억 |
+| PREMIUM (고급형) | `PREMIUM` | 1,000,000원~ | 월 거래 151~400건, 세금계산서 21~60건 | ~100억 |
+| LUXURY (명품형) | `LUXURY` | 2,000,000원~ | 월 거래 401건+, 세금계산서 61건+ | 100억+ |
+
+---
+
+### 5. 🆕 신규 DB — 견적서 (quotes)
+
+| 필드명 | 영문 코드 | 타입 |
+| --- | --- | --- |
+| `견적 제목` | `title` | Title |
+| `추천 등급` | `recommended_tier` | Select (LITE/BASIC/PREMIUM/LUXURY) |
+| `월 기본료` | `base_monthly_fee` | Number |
+| `원스톱 할인 적용` | `onestop_discount` | Checkbox |
+| `할인율` | `discount_rate` | Number (%) |
+| `할인 후 월 요금` | `final_monthly_fee` | Formula (`월 기본료 × (1 - 할인율/100)`) |
+| `추가 옵션 설명` | `additional_notes` | Text |
+| `산출 근거` | `calculation_basis` | Text |
+| `상담 신청` | `request_id` | Relation → 상담 신청 DB (단방향) |
+| `산출일` | `created_at` | Date |
+
+---
+
+### 6. 개발 영향 범위 요약
+
+- **API 수정 필요**: `/api/requests` 응답에 신규 7개 필드 포함
+- **API 수정 필요**: `/api/schedules` 응답에 신규 2개 필드 포함
+- **신규 API 필요**: `/api/pricing` (요금 기준표 조회), `/api/quotes/*` (견적서 CRUD + 자동 산출)
+- **UI 추가 필요**: 견적 자동 산출 패널 (`/requests/:id`), 견적서 목록/상세 (`/quotes`, `/quotes/:id`)
+- **접수 완료 로직**: `submission_complete` Formula가 Notion에서 자동 계산되므로, 웹앱에서는 해당 값을 읽기만 하면 됩니다

@@ -18,7 +18,7 @@ import { useState } from "react";
 function InfoRow({ label, value }: { label: string; value: string | number | undefined }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-muted-foreground font-medium">{label}</span>
+      <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</span>
       <span className="text-sm" data-testid={`text-info-${label}`}>{value || "-"}</span>
     </div>
   );
@@ -140,7 +140,7 @@ export default function RequestDetail() {
           </Link>
         </Button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold truncate" data-testid="text-detail-title">{request.companyContact}</h1>
+          <h1 className="text-lg font-bold truncate" data-testid="text-detail-title">{request.companyContact}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <Badge variant="secondary" className={getStatusColor(request.consultationStatus)}>
               {request.consultationStatus}
@@ -167,7 +167,7 @@ export default function RequestDetail() {
         <div className="lg:col-span-2 flex flex-col gap-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 기본 정보
               </CardTitle>
@@ -186,7 +186,7 @@ export default function RequestDetail() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
                 거래 및 세금 정보
               </CardTitle>
@@ -203,26 +203,26 @@ export default function RequestDetail() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <FileBarChart className="h-4 w-4 text-muted-foreground" />
                 상담 요청 상세
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div>
-                <span className="text-xs text-muted-foreground font-medium mb-1 block">지금 가장 급한 문제</span>
+                <span className="text-[11px] text-muted-foreground font-medium mb-1 block uppercase tracking-wide">지금 가장 급한 문제</span>
                 <TagList items={request.urgentIssues} />
               </div>
               <Separator />
               <InfoRow label="이번 달 해결 과제" value={request.monthlyTask} />
               <Separator />
               <div>
-                <span className="text-xs text-muted-foreground font-medium mb-1 block">원하는 서비스</span>
+                <span className="text-[11px] text-muted-foreground font-medium mb-1 block uppercase tracking-wide">원하는 서비스</span>
                 <TagList items={request.desiredServices} />
               </div>
               <Separator />
               <div>
-                <span className="text-xs text-muted-foreground font-medium mb-1 block">온라인 플랫폼 정산</span>
+                <span className="text-[11px] text-muted-foreground font-medium mb-1 block uppercase tracking-wide">온라인 플랫폼 정산</span>
                 <TagList items={request.platformSettlement} />
               </div>
               <Separator />
@@ -234,7 +234,7 @@ export default function RequestDetail() {
         <div className="flex flex-col gap-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Calculator className="h-4 w-4 text-muted-foreground" />
                 견적 자동 산출
               </CardTitle>
@@ -288,7 +288,7 @@ export default function RequestDetail() {
                   </div>
 
                   <div className="rounded-md bg-muted/50 p-3 mt-1">
-                    <span className="text-xs text-muted-foreground font-medium block mb-1">산출 근거</span>
+                    <span className="text-[11px] text-muted-foreground font-medium block mb-1 uppercase tracking-wide">산출 근거</span>
                     <p className="text-xs text-muted-foreground leading-relaxed" data-testid="text-calculation-basis">
                       {autoQuote.calculationBasis}
                     </p>

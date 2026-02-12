@@ -104,7 +104,7 @@ export default function QuoteDetail() {
           </Link>
         </Button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold truncate" data-testid="text-quote-detail-title">{quote.title}</h1>
+          <h1 className="text-lg font-bold truncate" data-testid="text-quote-detail-title">{quote.title}</h1>
           <span className="text-xs text-muted-foreground">{formatDate(quote.createdAt ? new Date(quote.createdAt).toISOString() : "")} 산출</span>
         </div>
       </div>
@@ -112,14 +112,14 @@ export default function QuoteDetail() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Receipt className="h-4 w-4 text-muted-foreground" />
               견적 정보
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-muted-foreground font-medium">서비스 등급</Label>
+              <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">서비스 등급</Label>
               <Select value={tier} onValueChange={setTier}>
                 <SelectTrigger data-testid="select-tier">
                   <SelectValue />
@@ -134,7 +134,7 @@ export default function QuoteDetail() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-muted-foreground font-medium">월 기본료 (원)</Label>
+              <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">월 기본료 (원)</Label>
               <Input
                 type="number"
                 value={baseFee}
@@ -156,7 +156,7 @@ export default function QuoteDetail() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-muted-foreground font-medium">할인율 (%)</Label>
+              <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">할인율 (%)</Label>
               <Input
                 type="number"
                 value={discountRate}
@@ -177,7 +177,7 @@ export default function QuoteDetail() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-muted-foreground font-medium">추가 옵션 설명</Label>
+              <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">추가 옵션 설명</Label>
               <Textarea
                 value={additionalNotes}
                 onChange={(e) => setAdditionalNotes(e.target.value)}
@@ -199,7 +199,7 @@ export default function QuoteDetail() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">산출 요약</CardTitle>
+            <CardTitle className="text-sm font-semibold">산출 요약</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-2">
@@ -225,7 +225,7 @@ export default function QuoteDetail() {
               <>
                 <Separator />
                 <div className="rounded-md bg-muted/50 p-3">
-                  <span className="text-xs text-muted-foreground font-medium block mb-1">산출 근거</span>
+                  <span className="text-[11px] text-muted-foreground font-medium block mb-1 uppercase tracking-wide">산출 근거</span>
                   <p className="text-xs text-muted-foreground leading-relaxed">{quote.calculationBasis}</p>
                 </div>
               </>

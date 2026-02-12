@@ -89,7 +89,7 @@ export default function ScheduleDetail() {
           </Link>
         </Button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold truncate" data-testid="text-schedule-detail-title">{schedule.title}</h1>
+          <h1 className="text-lg font-bold truncate" data-testid="text-schedule-detail-title">{schedule.title}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <Badge variant="secondary" className={getStatusColor(schedule.progressStatus)}>
               {schedule.progressStatus}
@@ -117,22 +117,22 @@ export default function ScheduleDetail() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-muted-foreground" />
               일정 정보
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div className="flex flex-col gap-0.5">
-              <span className="text-xs text-muted-foreground font-medium">예약 일시</span>
+              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">예약 일시</span>
               <span className="text-sm">{formatDateTime(schedule.scheduledAt)}</span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-xs text-muted-foreground font-medium">메모</span>
+              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">메모</span>
               <span className="text-sm">{schedule.memo || "-"}</span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-xs text-muted-foreground font-medium">견적 산출 여부</span>
+              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">견적 산출 여부</span>
               <span className="text-sm">{schedule.quoteGenerated ? "완료" : "미완료"}</span>
             </div>
           </CardContent>
@@ -140,7 +140,7 @@ export default function ScheduleDetail() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <StickyNote className="h-4 w-4 text-muted-foreground" />
               상담 내용 메모
             </CardTitle>

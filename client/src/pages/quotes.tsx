@@ -15,8 +15,8 @@ export default function Quotes() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
-        <h1 className="text-xl font-bold" data-testid="text-page-title">견적서 관리</h1>
-        <p className="text-sm text-muted-foreground mt-1">생성된 견적서를 조회하고 관리합니다.</p>
+        <h1 className="text-lg font-bold" data-testid="text-page-title">견적서 관리</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">생성된 견적서를 조회하고 관리합니다.</p>
       </div>
 
       {isLoading ? (

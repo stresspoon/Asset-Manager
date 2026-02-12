@@ -50,7 +50,7 @@ function CalendarView({ schedules }: { schedules: NotionConsultationSchedule[] }
           <Button variant="ghost" size="icon" onClick={prevMonth} data-testid="button-prev-month">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <CardTitle className="text-base font-semibold" data-testid="text-calendar-month">
+          <CardTitle className="text-sm font-semibold" data-testid="text-calendar-month">
             {year}년 {month + 1}월
           </CardTitle>
           <Button variant="ghost" size="icon" onClick={nextMonth} data-testid="button-next-month">
@@ -72,7 +72,7 @@ function CalendarView({ schedules }: { schedules: NotionConsultationSchedule[] }
                 key={idx}
                 className={`bg-card min-h-[80px] sm:min-h-[100px] p-1.5 ${
                   !day ? "bg-muted/20" : ""
-                } ${day && isToday(day) ? "ring-1 ring-primary/50 ring-inset" : ""}`}
+                } ${day && isToday(day) ? "ring-2 ring-primary/40 ring-inset" : ""}`}
               >
                 {day && (
                   <>
@@ -136,8 +136,8 @@ export default function Schedules() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold" data-testid="text-page-title">상담 일정 관리</h1>
-          <p className="text-sm text-muted-foreground mt-1">상담 일정을 캘린더 또는 목록으로 확인합니다.</p>
+          <h1 className="text-lg font-bold" data-testid="text-page-title">상담 일정 관리</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">상담 일정을 캘린더 또는 목록으로 확인합니다.</p>
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[120px]" data-testid="select-schedule-status">
