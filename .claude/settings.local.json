@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(openspec --version:*)",
+      "Bash(openspec status:*)",
+      "Bash(openspec instructions proposal:*)",
+      "Bash(openspec instructions design:*)",
+      "Bash(openspec instructions specs:*)",
+      "Bash(openspec instructions tasks:*)",
+      "Bash(openspec instructions apply:*)",
+      "Bash(npx tsc:*)",
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(npm install:*)",
+      "Bash(node_modules/.bin/tsc:*)",
+      "Bash(npm run build:vercel:*)",
+      "Bash(vercel --version:*)",
+      "Bash(git -C /Users/designers/Projects/Asset-Manager status -u)",
+      "Bash(git -C /Users/designers/Projects/Asset-Manager diff)",
+      "Bash(git -C /Users/designers/Projects/Asset-Manager log --oneline -5)",
+      "Bash(git add:*)",
+      "Bash(git -C /Users/designers/Projects/Asset-Manager commit -m \"$\\(cat <<''EOF''\nPrepare project for Vercel deployment\n\n- Isolate Replit plugins behind REPL_ID check in vite.config.ts\n- Add api/index.ts as Vercel serverless entry point \\(Express wrapper\\)\n- Split setupRoutes from registerRoutes for serverless compatibility\n- Optimize DB connection for serverless \\(SSL + max:1 in production\\)\n- Add vercel.json with build config and API rewrite rules\n- Add build:vercel script for frontend-only Vite build\n- Add .env.example documenting required environment variables\n- Update .gitignore with .env and .env.local\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /Users/designers/Projects/Asset-Manager status -s)"
+    ]
+  }
+}
