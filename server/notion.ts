@@ -405,6 +405,11 @@ export async function createRequest(data: {
     if (data.annualRevenue) {
       properties["연매출 규모"] = { select: { name: data.annualRevenue } };
     }
+    if (data.phone) {
+      properties["전화번호"] = {
+        rich_text: [{ text: { content: data.phone } }],
+      };
+    }
 
     if (data.monthlyVolume) {
       properties["월 거래량/세금계산서"] = { select: { name: data.monthlyVolume } };
