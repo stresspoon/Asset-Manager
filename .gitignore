@@ -6,3 +6,7 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+.vercel
+.agent/
+.claude/
+.local/
