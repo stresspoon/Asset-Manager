@@ -1,11 +1,11 @@
 ---
 name: "OPSX: Verify"
-description: Verify implementation matches change artifacts before archiving
+description: Verify implementation matches change artifacts and run integrated project quality checks before archiving
 category: Workflow
 tags: [workflow, verify, experimental]
 ---
 
-Verify that an implementation matches the change artifacts (specs, tasks, design).
+Verify that an implementation matches change artifacts (specs/tasks/design) and project quality standards.
 
 **Input**: Optionally specify a change name after `/opsx:verify` (e.g., `/opsx:verify add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
@@ -39,10 +39,11 @@ Verify that an implementation matches the change artifacts (specs, tasks, design
 
 4. **Initialize verification report structure**
 
-   Create a report structure with three dimensions:
+   Create a report structure with four dimensions:
    - **Completeness**: Track tasks and spec coverage
    - **Correctness**: Track requirement implementation and scenario coverage
    - **Coherence**: Track design adherence and pattern consistency
+   - **Project Quality**: Track integrated verify-skill outcomes
 
    Each dimension can have CRITICAL, WARNING, or SUGGESTION issues.
 
@@ -103,18 +104,35 @@ Verify that an implementation matches the change artifacts (specs, tasks, design
      - Add SUGGESTION: "Code pattern deviation: <details>"
      - Recommendation: "Consider following project pattern: <example>"
 
-8. **Generate Verification Report**
+8. **Run integrated project verification (`verify-implementation`)**
+
+   Execute project-level verification skills as part of this command.
+
+   **How to run:**
+   - Read `.claude/skills/verify-implementation/SKILL.md`
+   - Execute its registered targets (`verify-architecture`, `verify-testing`, `verify-style`) and gather issues
+
+   **Interpretation:**
+   - Any P1-level or build/type gate failure -> add CRITICAL issue in **Project Quality**
+   - Non-blocking convention/style gaps -> add WARNING or SUGGESTION
+
+   **If `.claude/skills/verify-implementation/SKILL.md` is missing:**
+   - Add WARNING: "Integrated verify stack unavailable"
+   - Continue OpenSpec verification without failing the command
+
+9. **Generate Verification Report**
 
    **Summary Scorecard**:
    ```
    ## Verification Report: <change-name>
 
    ### Summary
-   | Dimension    | Status           |
-   |--------------|------------------|
-   | Completeness | X/Y tasks, N reqs|
-   | Correctness  | M/N reqs covered |
-   | Coherence    | Followed/Issues  |
+   | Dimension       | Status            |
+   |-----------------|-------------------|
+   | Completeness    | X/Y tasks, N reqs |
+   | Correctness     | M/N reqs covered  |
+   | Coherence       | Followed/Issues   |
+   | Project Quality | Pass/Issues       |
    ```
 
    **Issues by Priority**:
@@ -122,17 +140,16 @@ Verify that an implementation matches the change artifacts (specs, tasks, design
    1. **CRITICAL** (Must fix before archive):
       - Incomplete tasks
       - Missing requirement implementations
-      - Each with specific, actionable recommendation
+      - Integrated verify stack P1 failures
 
    2. **WARNING** (Should fix):
       - Spec/design divergences
       - Missing scenario coverage
-      - Each with specific recommendation
+      - Non-blocking quality violations
 
    3. **SUGGESTION** (Nice to fix):
       - Pattern inconsistencies
       - Minor improvements
-      - Each with specific recommendation
 
    **Final Assessment**:
    - If CRITICAL issues: "X critical issue(s) found. Fix before archiving."
@@ -144,6 +161,7 @@ Verify that an implementation matches the change artifacts (specs, tasks, design
 - **Completeness**: Focus on objective checklist items (checkboxes, requirements list)
 - **Correctness**: Use keyword search, file path analysis, reasonable inference - don't require perfect certainty
 - **Coherence**: Look for glaring inconsistencies, don't nitpick style
+- **Project Quality**: Trust project verify skills for boundary/testing/style gates
 - **False Positives**: When uncertain, prefer SUGGESTION over WARNING, WARNING over CRITICAL
 - **Actionability**: Every issue must have a specific recommendation with file/line references where applicable
 
@@ -151,7 +169,8 @@ Verify that an implementation matches the change artifacts (specs, tasks, design
 
 - If only tasks.md exists: verify task completion only, skip spec/design checks
 - If tasks + specs exist: verify completeness and correctness, skip design
-- If full artifacts: verify all three dimensions
+- If full artifacts: verify all four dimensions
+- If integrated verify stack is unavailable: continue with warning
 - Always note which checks were skipped and why
 
 **Output Format**

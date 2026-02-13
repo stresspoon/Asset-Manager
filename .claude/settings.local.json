@@ -40,7 +40,24 @@
       "Bash(vercel logs:*)",
       "Bash(vercel:*)",
       "Bash(git commit:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(node -e:*)",
+      "Bash(source:*)",
+      "Bash(__NEW_LINE_682c77627fbf8ed2__ echo \"\")",
+      "Bash(__NEW_LINE_d9067815df639609__ echo \"\")",
+      "Bash(while IFS='=' read -r name value)",
+      "Bash(do)",
+      "Bash(for env in production preview development)",
+      "Bash(git reset:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(while read mode type hash name)",
+      "Bash(echo:*)",
+      "Bash(while IFS= read -r line)",
+      "Bash(if echo \"$line\")",
+      "Bash(# Reset to fix the commit git reset --soft 7466bb1 # Remove ALL Korean-named .md files from index to start clean git rm --cached -- \"\"*요구사항*\"\" \"\"*명세서*\"\" \"\"*보충*\"\" \"\"*경리*\"\" # Re-add the fixed file using git''s pathspec git add -A -- \"\"*.md\"\" # Verify no secrets remain in the staged content git diff --cached -- \"\"*.md\"\")",
+      "Bash(npx openspec:*)",
+      "Bash(npx tsx:*)",
+      "Bash(git status:*)"
     ]
   }
 }

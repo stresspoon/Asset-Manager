@@ -115,7 +115,7 @@ Working on task 4/7: <task description>
 - [x] Task 2
 ...
 
-All tasks complete! Ready to archive this change.
+All tasks complete! Next, run openspec-verify-change (includes integrated project quality gates), then archive.
 ```
 
 **Output On Pause (Issue Encountered)**

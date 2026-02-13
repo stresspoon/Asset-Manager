@@ -111,7 +111,7 @@ Working on task 4/7: <task description>
 - [x] Task 2
 ...
 
-All tasks complete! You can archive this change with `/opsx:archive`.
+All tasks complete! Next, run `/opsx:verify` (includes integrated project quality gates), then archive with `/opsx:archive`.
 ```
 
 **Output On Pause (Issue Encountered)**

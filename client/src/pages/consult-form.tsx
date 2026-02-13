@@ -441,6 +441,13 @@ function Step3Schedule({ formData, onChange }: StepProps) {
 
   const { data: slots, isLoading: slotsLoading } = useQuery<ScheduleSlot[]>({
     queryKey: ["/api/schedules/available-slots", selectedDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/schedules/available-slots?date=${selectedDate}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      return res.json();
+    },
     enabled: !!selectedDate,
   });
 
@@ -448,7 +455,7 @@ function Step3Schedule({ formData, onChange }: StepProps) {
   const minDate = new Date(today);
   minDate.setDate(minDate.getDate() + 1);
   const maxDate = new Date(today);
-  maxDate.setDate(maxDate.getDate() + 30);
+  maxDate.setDate(maxDate.getDate() + 7);
 
   const handleDateChange = (date: string) => {
     setSelectedDate(date);

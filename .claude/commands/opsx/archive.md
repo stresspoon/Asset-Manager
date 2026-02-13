@@ -1,6 +1,6 @@
 ---
 name: "OPSX: Archive"
-description: Archive a completed change in the experimental workflow
+description: Archive a completed change in the experimental workflow with integrated quality gates
 category: Workflow
 tags: [workflow, archive, experimental]
 ---
@@ -46,7 +46,23 @@ Archive a completed change in the experimental workflow.
 
    **If no tasks file exists:** Proceed without task-related warning.
 
-4. **Assess delta spec sync state**
+4. **Run integrated project quality gate (`verify-implementation`)**
+
+   Before archive, run project verification skills.
+
+   **How to run:**
+   - Read `.claude/skills/verify-implementation/SKILL.md`
+   - Execute registered verify targets and gather findings
+
+   **Archive decision rule:**
+   - If CRITICAL/P1 issues exist: show blocking warning and require explicit user confirmation to archive anyway
+   - If WARNING/SUGGESTION only: show summary and continue
+   - If all pass: continue silently with success note
+
+   **If verify stack unavailable:**
+   - Show warning and require user confirmation to continue archive
+
+5. **Assess delta spec sync state**
 
    Check for delta specs at `openspec/changes/<name>/specs/`. If none exist, proceed without sync prompt.
 
@@ -61,7 +77,7 @@ Archive a completed change in the experimental workflow.
 
    If user chooses sync, execute `/opsx:sync` logic. Proceed to archive regardless of choice.
 
-5. **Perform the archive**
+6. **Perform the archive**
 
    Create the archive directory if it doesn't exist:
    ```bash
@@ -78,13 +94,14 @@ Archive a completed change in the experimental workflow.
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    ```
 
-6. **Display summary**
+7. **Display summary**
 
    Show archive completion summary including:
    - Change name
    - Schema that was used
    - Archive location
    - Spec sync status (synced / sync skipped / no delta specs)
+   - Quality gate status (pass / warnings / overridden)
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**
@@ -96,24 +113,12 @@ Archive a completed change in the experimental workflow.
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
 **Specs:** ✓ Synced to main specs
+**Quality Gate:** ✓ verify-implementation passed
 
 All artifacts complete. All tasks complete.
 ```
 
-**Output On Success (No Delta Specs)**
-
-```
-## Archive Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** No delta specs
-
-All artifacts complete. All tasks complete.
-```
-
-**Output On Success With Warnings**
+**Output On Success With Warnings/Override**
 
 ```
 ## Archive Complete (with warnings)
@@ -122,13 +127,11 @@ All artifacts complete. All tasks complete.
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
 **Specs:** Sync skipped (user chose to skip)
+**Quality Gate:** Archived with override after critical issues
 
 **Warnings:**
-- Archived with 2 incomplete artifacts
-- Archived with 3 incomplete tasks
-- Delta spec sync was skipped (user chose to skip)
-
-Review the archive if this was not intentional.
+- Archived with N incomplete artifacts/tasks
+- verify-implementation reported critical issues (override confirmed)
 ```
 
 **Output On Error (Archive Exists)**
@@ -149,9 +152,10 @@ Target archive directory already exists.
 
 **Guardrails**
 - Always prompt for change selection if not provided
-- Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
+- Use artifact graph (`openspec status --json`) for completion checking
+- Do not silently skip quality gate
+- Do not block archive without user choice; require explicit override when critical issues exist
+- Preserve `.openspec.yaml` when moving to archive (it moves with the directory)
 - Show clear summary of what happened
-- If sync is requested, use /opsx:sync approach (agent-driven)
+- If sync is requested, use `/opsx:sync` approach (agent-driven)
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting
