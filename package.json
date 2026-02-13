@@ -8,7 +8,7 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
-    "build:vercel": "vite build",
+    "build:vercel": "vite build && esbuild server/vercel-entry.ts --bundle --platform=node --format=esm --outfile=api/index.mjs --target=node20 --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {

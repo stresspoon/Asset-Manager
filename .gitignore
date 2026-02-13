@@ -10,3 +10,4 @@ vite.config.ts.*
 .agent/
 .claude/
 .local/
+api/
