@@ -258,6 +258,9 @@ export async function setupRoutes(app: Express): Promise<void> {
         platformSettlement: data.platformSettlement,
         specificRequest: data.specificRequest,
         serviceType,
+        employeeCount: data.employeeCount,
+        currentAccountingMethod: data.currentAccountingMethod,
+        taxConcerns: data.taxConcerns,
       });
 
       const scheduledDatetime = `${data.scheduledDate}T${data.scheduledTime}:00+09:00`;

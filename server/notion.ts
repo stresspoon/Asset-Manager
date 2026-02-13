@@ -388,11 +388,16 @@ export async function createRequest(data: {
   availableTime?: string;
   specificRequest?: string;
   serviceType: string;
+  // tax-specific fields
+  employeeCount?: string;
+  currentAccountingMethod?: string;
+  taxConcerns?: string[];
 }): Promise<string> {
   assertNotionConfig();
   const serviceType = data.serviceType === "tax" ? "tax" : "accounting";
   const requestDbId = getRequestDbIdForService(serviceType);
   try {
+    // Common properties for both service types
     const properties: any = {
       "회사명/담당자/연락처": {
         title: [{ text: { content: data.companyContact } }],
@@ -411,52 +416,82 @@ export async function createRequest(data: {
       };
     }
 
-    if (data.monthlyVolume) {
-      properties["월 거래량/세금계산서"] = { select: { name: data.monthlyVolume } };
-    }
-    if (data.employeeRevenue) {
-      properties["직원 수 및 연매출"] = {
-        rich_text: [{ text: { content: data.employeeRevenue } }],
-      };
-    }
-    if (data.bankCardCount) {
-      properties["통장/법인카드 개수"] = {
-        rich_text: [{ text: { content: data.bankCardCount } }],
-      };
-    }
-    if (data.cardUsageCount) {
-      properties["카드 사용 건수 (월)"] = { select: { name: data.cardUsageCount } };
-    }
-    if (data.cardCount !== undefined) {
-      properties["카드 개수"] = { number: data.cardCount };
-    }
-    if (data.taxInvoiceCount) {
-      properties["세금계산서 발행 건수 (월)"] = { select: { name: data.taxInvoiceCount } };
-    }
-    if (data.urgentIssues && data.urgentIssues.length > 0) {
-      properties["지금 가장 급한 문제"] = {
-        multi_select: data.urgentIssues.map((name) => ({ name })),
-      };
-    }
-    if (data.monthlyTask) {
-      properties["이번 달 해결 과제"] = {
-        rich_text: [{ text: { content: data.monthlyTask } }],
-      };
-    }
-    if (data.desiredServices && data.desiredServices.length > 0) {
-      properties["원하는 서비스"] = {
-        multi_select: data.desiredServices.map((name) => ({ name })),
-      };
-    }
-    if (data.platformSettlement && data.platformSettlement.length > 0) {
-      properties["온라인 플랫폼 정산"] = {
-        multi_select: data.platformSettlement.map((name) => ({ name })),
-      };
-    }
-    if (data.specificRequest) {
-      properties["구체적"] = {
-        rich_text: [{ text: { content: data.specificRequest.substring(0, 2000) } }],
-      };
+    if (serviceType === "accounting") {
+      // Accounting-specific properties (경리아웃소싱 DB)
+      if (data.monthlyVolume) {
+        properties["월 거래량/세금계산서"] = { select: { name: data.monthlyVolume } };
+      }
+      if (data.employeeRevenue) {
+        properties["직원 수 및 연매출"] = {
+          rich_text: [{ text: { content: data.employeeRevenue } }],
+        };
+      }
+      if (data.bankCardCount) {
+        properties["통장/법인카드 개수"] = {
+          rich_text: [{ text: { content: data.bankCardCount } }],
+        };
+      }
+      if (data.cardUsageCount) {
+        properties["카드 사용 건수 (월)"] = { select: { name: data.cardUsageCount } };
+      }
+      if (data.cardCount !== undefined) {
+        properties["카드 개수"] = { number: data.cardCount };
+      }
+      if (data.taxInvoiceCount) {
+        properties["세금계산서 발행 건수 (월)"] = { select: { name: data.taxInvoiceCount } };
+      }
+      if (data.urgentIssues && data.urgentIssues.length > 0) {
+        properties["지금 가장 급한 문제"] = {
+          multi_select: data.urgentIssues.map((name) => ({ name })),
+        };
+      }
+      if (data.monthlyTask) {
+        properties["이번 달 해결 과제"] = {
+          rich_text: [{ text: { content: data.monthlyTask } }],
+        };
+      }
+      if (data.desiredServices && data.desiredServices.length > 0) {
+        properties["원하는 서비스"] = {
+          multi_select: data.desiredServices.map((name) => ({ name })),
+        };
+      }
+      if (data.platformSettlement && data.platformSettlement.length > 0) {
+        properties["온라인 플랫폼 정산"] = {
+          multi_select: data.platformSettlement.map((name) => ({ name })),
+        };
+      }
+      if (data.specificRequest) {
+        properties["구체적"] = {
+          rich_text: [{ text: { content: data.specificRequest.substring(0, 2000) } }],
+        };
+      }
+    } else {
+      // Tax-specific properties (일반 세무기장 DB)
+      if (data.employeeCount) {
+        properties["직원 수"] = {
+          rich_text: [{ text: { content: data.employeeCount } }],
+        };
+      }
+      if (data.currentAccountingMethod) {
+        properties["현재 세무대리인 유무"] = {
+          checkbox: data.currentAccountingMethod === "세무사 기장",
+        };
+      }
+      if (data.desiredServices && data.desiredServices.length > 0) {
+        properties["원하는 서비스"] = {
+          multi_select: data.desiredServices.map((name) => ({ name })),
+        };
+      }
+      if (data.taxConcerns && data.taxConcerns.length > 0) {
+        properties["세무 관련 고민"] = {
+          multi_select: data.taxConcerns.map((name) => ({ name })),
+        };
+      }
+      if (data.specificRequest) {
+        properties["구체적 요청사항"] = {
+          rich_text: [{ text: { content: data.specificRequest.substring(0, 2000) } }],
+        };
+      }
     }
 
     const response = await notion.pages.create({
