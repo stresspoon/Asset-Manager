@@ -399,10 +399,12 @@ export async function createRequest(data: {
       },
       "사업자 유형": { select: { name: data.businessType } },
       "주요 업종": { select: { name: data.industry } },
-      "연매출 규모": { select: { name: data.annualRevenue } },
       "폼 작성 완료 여부": { checkbox: true },
       "예약 완료 여부": { checkbox: true },
     };
+    if (data.annualRevenue) {
+      properties["연매출 규모"] = { select: { name: data.annualRevenue } };
+    }
 
     if (data.monthlyVolume) {
       properties["월 거래량/세금계산서"] = { select: { name: data.monthlyVolume } };
