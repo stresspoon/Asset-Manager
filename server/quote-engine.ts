@@ -1,4 +1,4 @@
-import type { TierCode } from "@shared/schema";
+import type { TierCode, TaxPricing } from "@shared/schema";
 
 interface QuoteInput {
   annualRevenue: string;
@@ -9,6 +9,13 @@ interface QuoteInput {
   cardCount: number;
   cardUsageCount: string;
   platformSettlement: string[];
+}
+
+interface TaxQuoteInput {
+  annualRevenue: string;
+  businessType: string;
+  companyContact: string;
+  industry: string;
 }
 
 const TIER_FEES: Record<TierCode, number> = {
@@ -79,6 +86,51 @@ export function calculateQuote(input: QuoteInput): {
   return {
     recommendedTier,
     baseMonthlyFee,
+    calculationBasis: basisParts.join(" | "),
+  };
+}
+
+function matchRevenueRange(annualRevenue: string, rangeStr: string): boolean {
+  const rev = annualRevenue.toLowerCase().replace(/\s/g, "");
+  const range = rangeStr.toLowerCase().replace(/\s/g, "");
+  if (rev.includes("5천만원이하") && range.includes("5천만원이하")) return true;
+  if (rev.includes("5천만원~1억") && range.includes("5천만원~1억")) return true;
+  if (rev.includes("1억~3억") && range.includes("1억~3억")) return true;
+  if (rev.includes("3억~5억") && range.includes("3억~5억")) return true;
+  if (rev.includes("5억~10억") && range.includes("5억~10억")) return true;
+  if (rev.includes("10억") && range.includes("10억이상")) return true;
+  if (rev.includes("10억이하") && range.includes("5억~10억")) return true;
+  if (rev.includes("10억~50억") && range.includes("10억이상")) return true;
+  if (rev.includes("50억~100억") && range.includes("10억이상")) return true;
+  if (rev.includes("100억이상") && range.includes("10억이상")) return true;
+  return false;
+}
+
+export function calculateTaxQuote(input: TaxQuoteInput, taxPricing: TaxPricing[]): {
+  recommendedTier: string;
+  baseMonthlyFee: number;
+  calculationBasis: string;
+} {
+  const matched = taxPricing.find((p) => {
+    const typeMatch = p.businessType === input.businessType;
+    const rangeMatch = matchRevenueRange(input.annualRevenue, p.revenueRange);
+    return typeMatch && rangeMatch;
+  });
+
+  const monthlyFee = matched?.monthlyFee || 0;
+  const revenueRange = matched?.revenueRange || input.annualRevenue;
+
+  const basisParts = [
+    `사업자 유형: ${input.businessType}`,
+    `연매출: ${input.annualRevenue}`,
+    `매칭 구간: ${revenueRange}`,
+    `업종: ${input.industry}`,
+    `월 기장료: ${monthlyFee > 0 ? `${monthlyFee.toLocaleString()}원` : "미정 (추후 설정)"}`,
+  ];
+
+  return {
+    recommendedTier: "TAX",
+    baseMonthlyFee: monthlyFee,
     calculationBasis: basisParts.join(" | "),
   };
 }

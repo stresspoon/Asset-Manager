@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Users, CheckCircle, CalendarDays, ArrowRight, TrendingUp } from "lucide-react";
+import { FileText, Users, CheckCircle, CalendarDays, ArrowRight, TrendingUp, BookOpen, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { formatDate, formatDateTime, getStatusColor } from "@/lib/format";
+import { formatDate, formatDateTime, getStatusColor, getServiceTypeLabel, getServiceTypeColor } from "@/lib/format";
 import type { DashboardStats, NotionConsultationRequest, NotionConsultationSchedule } from "@shared/schema";
 
 const statConfigs = [
@@ -85,17 +85,31 @@ export default function Dashboard() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex flex-col gap-2">
             <h1 className="text-xl font-bold" data-testid="text-page-title">
-              경리아웃소싱 상담 관리
+              상담 관리 대시보드
             </h1>
             <p className="text-sm text-white/80 max-w-lg">
-              천지세무법인 경리아웃소싱 상담 현황을 한눈에 확인하고 효율적으로 관리하세요.
+              천지세무법인 경리아웃소싱 / 세무기장 상담 현황을 한눈에 확인하고 효율적으로 관리하세요.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-white/60" />
-            <span className="text-sm text-white/70 font-medium" data-testid="text-total-count">
-              총 {stats ? stats.newRequests + stats.inProgress + stats.completed : 0}건 관리 중
-            </span>
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-white/60" />
+              <span className="text-sm text-white/70 font-medium" data-testid="text-total-count">
+                총 {stats ? stats.newRequests + stats.inProgress + stats.completed : 0}건 관리 중
+              </span>
+            </div>
+            {stats && (stats.accountingRequests > 0 || stats.taxRequests > 0) && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-white/60 flex items-center gap-1">
+                  <BookOpen className="h-3 w-3" />
+                  경리아웃소싱 {stats.accountingRequests}건
+                </span>
+                <span className="text-xs text-white/60 flex items-center gap-1">
+                  <Calculator className="h-3 w-3" />
+                  세무기장 {stats.taxRequests}건
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -147,7 +161,12 @@ export default function Dashboard() {
                     data-testid={`link-request-${req.id}`}
                   >
                     <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-sm font-medium truncate">{req.companyContact}</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium truncate">{req.companyContact}</span>
+                        <Badge variant="secondary" className={`text-[10px] ${getServiceTypeColor(req.serviceType)}`}>
+                          {getServiceTypeLabel(req.serviceType)}
+                        </Badge>
+                      </div>
                       <span className="text-xs text-muted-foreground">{req.industry} · {formatDate(req.submittedAt)}</span>
                     </div>
                     <Badge variant="secondary" className={`shrink-0 ${getStatusColor(req.consultationStatus)}`}>

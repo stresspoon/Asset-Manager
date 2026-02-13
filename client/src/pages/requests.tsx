@@ -2,19 +2,19 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, FileText } from "lucide-react";
 import { Link } from "wouter";
-import { formatDate, getStatusColor } from "@/lib/format";
+import { formatDate, getStatusColor, getServiceTypeLabel, getServiceTypeColor } from "@/lib/format";
 import type { NotionConsultationRequest } from "@shared/schema";
 
 export default function Requests() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [businessTypeFilter, setBusinessTypeFilter] = useState("all");
+  const [serviceTypeFilter, setServiceTypeFilter] = useState("all");
 
   const { data: requests, isLoading } = useQuery<NotionConsultationRequest[]>({
     queryKey: ["/api/requests"],
@@ -24,7 +24,8 @@ export default function Requests() {
     const matchSearch = !searchTerm || req.companyContact.toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = statusFilter === "all" || req.consultationStatus === statusFilter;
     const matchType = businessTypeFilter === "all" || req.businessType === businessTypeFilter;
-    return matchSearch && matchStatus && matchType;
+    const matchService = serviceTypeFilter === "all" || req.serviceType === serviceTypeFilter;
+    return matchSearch && matchStatus && matchType && matchService;
   });
 
   return (
@@ -45,10 +46,20 @@ export default function Requests() {
             data-testid="input-search"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
+            <SelectTrigger className="w-[140px]" data-testid="select-service-filter">
+              <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="서비스" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체 서비스</SelectItem>
+              <SelectItem value="accounting">경리아웃소싱</SelectItem>
+              <SelectItem value="tax">일반 세무기장</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[130px]" data-testid="select-status-filter">
-              <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
               <SelectValue placeholder="상태" />
             </SelectTrigger>
             <SelectContent>
@@ -97,6 +108,9 @@ export default function Requests() {
                         <span className="text-sm font-semibold truncate" data-testid={`text-company-${req.id}`}>
                           {req.companyContact}
                         </span>
+                        <Badge variant="secondary" className={`text-[10px] shrink-0 ${getServiceTypeColor(req.serviceType)}`}>
+                          {getServiceTypeLabel(req.serviceType)}
+                        </Badge>
                         <Badge variant="outline" className="text-xs shrink-0">
                           {req.businessType}
                         </Badge>
@@ -113,7 +127,9 @@ export default function Requests() {
                       <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                         <span className="text-xs text-muted-foreground">{req.industry}</span>
                         <span className="text-xs text-muted-foreground">{req.annualRevenue}</span>
-                        <span className="text-xs text-muted-foreground">{req.monthlyVolume}</span>
+                        {req.monthlyVolume && (
+                          <span className="text-xs text-muted-foreground">{req.monthlyVolume}</span>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1.5 shrink-0">

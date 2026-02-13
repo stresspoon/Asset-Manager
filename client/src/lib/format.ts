@@ -54,6 +54,8 @@ export function getTierColor(tier: string): string {
       return "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300";
     case "LUXURY":
       return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+    case "TAX":
+      return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300";
     default:
       return "bg-muted text-muted-foreground";
   }
@@ -65,6 +67,17 @@ export function getTierLabel(tier: string): string {
     case "BASIC": return "BASIC (일반형)";
     case "PREMIUM": return "PREMIUM (고급형)";
     case "LUXURY": return "LUXURY (명품형)";
+    case "TAX": return "일반 세무기장";
     default: return tier;
   }
+}
+
+export function getServiceTypeLabel(serviceType: string): string {
+  return serviceType === "tax" ? "일반 세무기장" : "경리아웃소싱";
+}
+
+export function getServiceTypeColor(serviceType: string): string {
+  return serviceType === "tax"
+    ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300"
+    : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
 }

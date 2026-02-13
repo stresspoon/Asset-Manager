@@ -1,4 +1,4 @@
-import { quotes, servicePricing, type Quote, type InsertQuote, type ServicePricing, type InsertServicePricing } from "@shared/schema";
+import { quotes, servicePricing, taxPricing, type Quote, type InsertQuote, type ServicePricing, type InsertServicePricing, type TaxPricing, type InsertTaxPricing } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -8,9 +8,12 @@ export interface IStorage {
   getQuoteByRequestId(notionRequestId: string): Promise<Quote | undefined>;
   createQuote(quote: InsertQuote): Promise<Quote>;
   updateQuote(id: number, data: Partial<InsertQuote>): Promise<Quote | undefined>;
+  deleteQuote(id: number): Promise<boolean>;
   getServicePricing(): Promise<ServicePricing[]>;
   getServicePricingByTier(tierCode: string): Promise<ServicePricing | undefined>;
   seedPricing(): Promise<void>;
+  getTaxPricing(): Promise<TaxPricing[]>;
+  seedTaxPricing(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -36,6 +39,11 @@ export class DatabaseStorage implements IStorage {
   async updateQuote(id: number, data: Partial<InsertQuote>): Promise<Quote | undefined> {
     const [updated] = await db.update(quotes).set(data).where(eq(quotes.id, id)).returning();
     return updated || undefined;
+  }
+
+  async deleteQuote(id: number): Promise<boolean> {
+    const result = await db.delete(quotes).where(eq(quotes.id, id)).returning();
+    return result.length > 0;
   }
 
   async getServicePricing(): Promise<ServicePricing[]> {
@@ -80,6 +88,30 @@ export class DatabaseStorage implements IStorage {
         matchingCondition: "월 거래 401건 이상, 세금계산서 61건 이상",
         targetRevenue: "100억 이상",
       },
+    ]);
+  }
+
+  async getTaxPricing(): Promise<TaxPricing[]> {
+    return db.select().from(taxPricing);
+  }
+
+  async seedTaxPricing(): Promise<void> {
+    const existing = await db.select().from(taxPricing);
+    if (existing.length > 0) return;
+
+    await db.insert(taxPricing).values([
+      { revenueRange: "5천만원 이하", businessType: "개인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "5천만원~1억", businessType: "개인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "1억~3억", businessType: "개인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "3억~5억", businessType: "개인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "5억~10억", businessType: "개인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "10억 이상", businessType: "개인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "5천만원 이하", businessType: "법인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "5천만원~1억", businessType: "법인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "1억~3억", businessType: "법인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "3억~5억", businessType: "법인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "5억~10억", businessType: "법인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
+      { revenueRange: "10억 이상", businessType: "법인사업자", monthlyFee: 0, description: "금액 미정 (추후 설정)" },
     ]);
   }
 }

@@ -3,12 +3,13 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertQuoteSchema } from "@shared/schema";
 import * as notion from "./notion";
-import { calculateQuote } from "./quote-engine";
-import type { NotionConsultationRequest } from "@shared/schema";
+import { calculateQuote, calculateTaxQuote } from "./quote-engine";
+import type { NotionConsultationRequest, ServiceType } from "@shared/schema";
 
 const sampleRequests: NotionConsultationRequest[] = [
   {
     id: "sample-1",
+    serviceType: "accounting",
     companyContact: "(주)테크스타 / 김민수 대표 / 010-1234-5678",
     businessType: "법인사업자",
     industry: "IT/서비스",
@@ -33,6 +34,7 @@ const sampleRequests: NotionConsultationRequest[] = [
   },
   {
     id: "sample-2",
+    serviceType: "accounting",
     companyContact: "맛나푸드 / 박영희 사장 / 010-9876-5432",
     businessType: "개인사업자",
     industry: "음식점/프랜차이즈",
@@ -57,6 +59,7 @@ const sampleRequests: NotionConsultationRequest[] = [
   },
   {
     id: "sample-3",
+    serviceType: "tax",
     companyContact: "(주)글로벌트레이드 / 이준호 이사 / 010-5555-1234",
     businessType: "법인사업자",
     industry: "제조/수출",
@@ -81,6 +84,7 @@ const sampleRequests: NotionConsultationRequest[] = [
   },
   {
     id: "sample-4",
+    serviceType: "accounting",
     companyContact: "스마트몰 / 정수진 대표 / 010-3333-7777",
     businessType: "개인사업자",
     industry: "온라인몰/플랫폼",
@@ -105,6 +109,7 @@ const sampleRequests: NotionConsultationRequest[] = [
   },
   {
     id: "sample-5",
+    serviceType: "accounting",
     companyContact: "(주)메디헬스 / 최윤아 원장 / 010-8888-2222",
     businessType: "법인사업자",
     industry: "기타",
@@ -152,6 +157,7 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   await storage.seedPricing();
+  await storage.seedTaxPricing();
 
   app.get("/api/dashboard/stats", async (_req, res) => {
     try {
@@ -159,6 +165,8 @@ export async function registerRoutes(
       const newRequests = requests.filter((r) => r.consultationStatus === "신규접수").length;
       const inProgress = requests.filter((r) => r.consultationStatus === "상담중").length;
       const completed = requests.filter((r) => r.consultationStatus === "완료").length;
+      const accountingRequests = requests.filter((r) => r.serviceType === "accounting").length;
+      const taxRequests = requests.filter((r) => r.serviceType === "tax").length;
 
       let todaySchedules = 0;
       try {
@@ -166,7 +174,7 @@ export async function registerRoutes(
         todaySchedules = today.length;
       } catch {}
 
-      res.json({ newRequests, inProgress, completed, todaySchedules });
+      res.json({ newRequests, inProgress, completed, todaySchedules, accountingRequests, taxRequests });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -175,13 +183,18 @@ export async function registerRoutes(
   app.get("/api/requests", async (req, res) => {
     try {
       const requests = await getRequestsData();
+      const serviceType = req.query.serviceType as string | undefined;
+      let filtered = requests;
+      if (serviceType && serviceType !== "all") {
+        filtered = requests.filter((r) => r.serviceType === serviceType);
+      }
       if (req.query[0] === "recent") {
-        const sorted = [...requests].sort(
+        const sorted = [...filtered].sort(
           (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
         );
         return res.json(sorted.slice(0, 5));
       }
-      res.json(requests);
+      res.json(filtered);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -232,6 +245,26 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/requests/:id", async (req, res) => {
+    try {
+      if (req.params.id.startsWith("sample-")) {
+        const idx = sampleRequests.findIndex((r) => r.id === req.params.id);
+        if (idx === -1) {
+          return res.status(404).json({ message: "Request not found" });
+        }
+        sampleRequests[idx] = { ...sampleRequests[idx], ...req.body };
+        return res.json({ success: true });
+      }
+      const success = await notion.updateRequestFields(req.params.id, req.body);
+      if (!success) {
+        return res.status(500).json({ message: "Failed to update request" });
+      }
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/schedules", async (_req, res) => {
     try {
       const schedules = await notion.getSchedules();
@@ -245,6 +278,29 @@ export async function registerRoutes(
     try {
       const schedules = await notion.getTodaySchedules();
       res.json(schedules);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/schedules/available-slots", async (req, res) => {
+    try {
+      const date = req.query.date as string;
+      if (!date) {
+        return res.status(400).json({ message: "date query parameter required" });
+      }
+      const dayOfWeek = new Date(date).getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return res.json([]);
+      }
+      const bookedTimes = await notion.getBookedSlots(date);
+      const allSlots = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+      const slots = allSlots.map((time) => ({
+        date,
+        time,
+        available: !bookedTimes.includes(time),
+      }));
+      res.json(slots);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -288,6 +344,54 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/consult/submit", async (req, res) => {
+    try {
+      const data = req.body;
+      const serviceType = data.serviceType || "accounting";
+      const serviceLabel = serviceType === "tax" ? "일반세무기장" : "경리아웃소싱";
+
+      const requestId = await notion.createRequest({
+        companyContact: data.companyContact,
+        phone: data.phone,
+        businessType: data.businessType,
+        industry: data.industry,
+        monthlyVolume: data.monthlyVolume,
+        employeeRevenue: data.employeeRevenue,
+        bankCardCount: data.bankCardCount,
+        cardUsageCount: data.cardUsageCount,
+        cardCount: data.cardCount,
+        taxInvoiceCount: data.taxInvoiceCount,
+        annualRevenue: data.annualRevenue,
+        urgentIssues: data.urgentIssues,
+        monthlyTask: data.monthlyTask,
+        desiredServices: data.desiredServices,
+        platformSettlement: data.platformSettlement,
+        specificRequest: data.specificRequest,
+        serviceType,
+      });
+
+      const scheduledDatetime = `${data.scheduledDate}T${data.scheduledTime}:00+09:00`;
+      const title = `${serviceLabel} 상담 - ${data.companyContact?.split("/")[0]?.trim() || "고객"}`;
+
+      const scheduleId = await notion.createSchedule({
+        title,
+        scheduledAt: scheduledDatetime,
+        serviceType,
+        requestId: requestId || undefined,
+      });
+
+      res.json({
+        success: true,
+        requestId,
+        scheduleId,
+        message: "상담 신청이 완료되었습니다.",
+      });
+    } catch (error: any) {
+      console.error("Error submitting consultation:", error);
+      res.status(500).json({ message: error.message || "상담 신청 중 오류가 발생했습니다." });
+    }
+  });
+
   app.get("/api/pricing", async (_req, res) => {
     try {
       const notionPricing = await notion.getPricing();
@@ -296,6 +400,15 @@ export async function registerRoutes(
       }
       const dbPricing = await storage.getServicePricing();
       res.json(dbPricing);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/pricing/tax", async (_req, res) => {
+    try {
+      const pricing = await storage.getTaxPricing();
+      res.json(pricing);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -327,6 +440,16 @@ export async function registerRoutes(
       const request = await getRequestByIdData(req.params.requestId);
       if (!request) {
         return res.status(404).json({ message: "Request not found" });
+      }
+      if (request.serviceType === "tax") {
+        const taxPricing = await storage.getTaxPricing();
+        const result = calculateTaxQuote({
+          annualRevenue: request.annualRevenue,
+          businessType: request.businessType,
+          companyContact: request.companyContact,
+          industry: request.industry,
+        }, taxPricing);
+        return res.json(result);
       }
       const result = calculateQuote({
         annualRevenue: request.annualRevenue,
@@ -398,6 +521,18 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Quote not found" });
       }
       res.json(quote);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/quotes/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteQuote(Number(req.params.id));
+      if (!deleted) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

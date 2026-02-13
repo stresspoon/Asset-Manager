@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, CalendarDays, Receipt, Building2 } from "lucide-react";
+import { LayoutDashboard, FileText, CalendarDays, Receipt, Building2, ClipboardList, ExternalLink } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import {
   Sidebar,
@@ -20,6 +20,11 @@ const menuItems = [
   { title: "견적서 관리", url: "/quotes", icon: Receipt },
 ];
 
+const publicLinks = [
+  { title: "경리아웃소싱 상담 신청", url: "/consult/accounting", icon: ClipboardList },
+  { title: "일반세무기장 상담 신청", url: "/consult/tax", icon: ClipboardList },
+];
+
 export function AppSidebar() {
   const [location] = useLocation();
 
@@ -39,14 +44,14 @@ export function AppSidebar() {
             <span className="text-sm font-bold tracking-tight text-sidebar-foreground" data-testid="text-app-title">
               천지세무법인
             </span>
-            <span className="text-[11px] text-sidebar-foreground/60" data-testid="text-app-subtitle">경리아웃소싱 상담관리</span>
+            <span className="text-[11px] text-sidebar-foreground/60" data-testid="text-app-subtitle">상담 관리 시스템</span>
           </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider font-semibold px-5">
-            메뉴
+            관리자
           </SidebarGroupLabel>
           <SidebarGroupContent className="px-2 mt-1">
             <SidebarMenu>
@@ -61,6 +66,27 @@ export function AppSidebar() {
                       <item.icon className="h-[18px] w-[18px]" />
                       <span className="text-[13px] font-medium">{item.title}</span>
                     </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider font-semibold px-5">
+            고객 폼
+          </SidebarGroupLabel>
+          <SidebarGroupContent className="px-2 mt-1">
+            <SidebarMenu>
+              {publicLinks.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild tooltip={item.title}>
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" data-testid={`link-nav-${item.url.split("/").pop()}`}>
+                      <item.icon className="h-[18px] w-[18px]" />
+                      <span className="text-[13px] font-medium">{item.title}</span>
+                      <ExternalLink className="h-3 w-3 ml-auto text-sidebar-foreground/40" />
+                    </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

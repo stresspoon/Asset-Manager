@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -18,8 +18,9 @@ import Schedules from "@/pages/schedules";
 import ScheduleDetail from "@/pages/schedule-detail";
 import Quotes from "@/pages/quotes";
 import QuoteDetail from "@/pages/quote-detail";
+import ConsultForm from "@/pages/consult-form";
 
-function Router() {
+function AdminRouter() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
@@ -39,40 +40,56 @@ const sidebarStyle = {
   "--sidebar-width-icon": "3.5rem",
 };
 
+function AdminLayout() {
+  return (
+    <SidebarProvider style={sidebarStyle as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        <AppSidebar />
+        <div className="flex flex-col flex-1 min-w-0">
+          <header className="flex items-center justify-between gap-3 px-6 py-3 border-b sticky top-0 z-50 bg-background">
+            <div className="flex items-center gap-3 flex-1">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <div className="relative max-w-md flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="검색..."
+                  className="pl-9 bg-muted/50 border-transparent focus:border-primary/30"
+                  data-testid="input-global-search"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" data-testid="button-notifications">
+                <Bell className="h-4 w-4" />
+              </Button>
+              <ThemeToggle />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto bg-background">
+            <AdminRouter />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
 function App() {
+  const [location] = useLocation();
+  const isPublicRoute = location.startsWith("/consult/");
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-            <div className="flex h-screen w-full">
-              <AppSidebar />
-              <div className="flex flex-col flex-1 min-w-0">
-                <header className="flex items-center justify-between gap-3 px-6 py-3 border-b sticky top-0 z-50 bg-background">
-                  <div className="flex items-center gap-3 flex-1">
-                    <SidebarTrigger data-testid="button-sidebar-toggle" />
-                    <div className="relative max-w-md flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="검색..."
-                        className="pl-9 bg-muted/50 border-transparent focus:border-primary/30"
-                        data-testid="input-global-search"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" data-testid="button-notifications">
-                      <Bell className="h-4 w-4" />
-                    </Button>
-                    <ThemeToggle />
-                  </div>
-                </header>
-                <main className="flex-1 overflow-auto bg-background">
-                  <Router />
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
+          {isPublicRoute ? (
+            <Switch>
+              <Route path="/consult/accounting" component={ConsultForm} />
+              <Route path="/consult/tax" component={ConsultForm} />
+            </Switch>
+          ) : (
+            <AdminLayout />
+          )}
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>
