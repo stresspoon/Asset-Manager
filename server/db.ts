@@ -11,7 +11,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL.trim(),
   ssl: { rejectUnauthorized: false },
   max: process.env.NODE_ENV === "production" ? 1 : 10,
 });
