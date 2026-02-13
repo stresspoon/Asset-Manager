@@ -10,11 +10,9 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-const isProduction = process.env.NODE_ENV === "production";
-
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: isProduction ? { rejectUnauthorized: false } : undefined,
-  max: isProduction ? 1 : 10,
+  ssl: { rejectUnauthorized: false },
+  max: process.env.NODE_ENV === "production" ? 1 : 10,
 });
 export const db = drizzle(pool, { schema });
