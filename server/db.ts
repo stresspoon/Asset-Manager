@@ -10,8 +10,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+// Remove sslmode from URL to prevent conflict with explicit ssl config
+const rawUrl = process.env.DATABASE_URL.trim();
+const connectionString = rawUrl.replace(/[?&]sslmode=[^&]*/g, "").replace(/\?$/, "");
+
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL.trim(),
+  connectionString,
   ssl: { rejectUnauthorized: false },
   max: process.env.NODE_ENV === "production" ? 1 : 10,
 });
