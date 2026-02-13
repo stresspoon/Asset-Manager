@@ -11,7 +11,7 @@ execSync("npx vite build", { stdio: "inherit" });
 console.log("Bundling API...");
 mkdirSync(`${OUTPUT}/functions/api.func`, { recursive: true });
 execSync(
-  `npx esbuild server/vercel-entry.ts --bundle --platform=node --format=esm --outfile=${OUTPUT}/functions/api.func/index.mjs --target=node20 --banner:js="import{createRequire}from'module';const require=createRequire(import.meta.url);"`,
+  `npx esbuild api/index.ts --bundle --platform=node --format=esm --outfile=${OUTPUT}/functions/api.func/index.mjs --target=node20 --banner:js="import{createRequire}from'module';const require=createRequire(import.meta.url);"`,
   { stdio: "inherit" },
 );
 

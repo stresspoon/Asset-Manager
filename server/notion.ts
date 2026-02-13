@@ -1,14 +1,119 @@
 import { Client } from "@notionhq/client";
 import type { NotionConsultationRequest, NotionConsultationSchedule, ServiceType } from "@shared/schema";
 
+function normalizeEnvValue(value: string | undefined): string {
+  return (value || "").replace(/\\n/g, "").trim();
+}
+
+function normalizeDatabaseId(value: string | undefined): string {
+  return normalizeEnvValue(value).replace(/\s+/g, "");
+}
+
+export class NotionIntegrationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotionIntegrationError";
+  }
+}
+
+export function isNotionIntegrationError(error: unknown): error is NotionIntegrationError {
+  return error instanceof NotionIntegrationError;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function toNotionError(action: string, error: unknown): NotionIntegrationError {
+  if (isNotionIntegrationError(error)) return error;
+  return new NotionIntegrationError(`${action}: ${getErrorMessage(error)}`);
+}
+
+function assertNotionConfig(): void {
+  if (!NOTION_API_KEY) {
+    throw new NotionIntegrationError("NOTION_API_KEY is missing or invalid. Check Vercel environment variables.");
+  }
+}
+
+function requireDatabaseId(envName: string, value: string): string {
+  if (!value) {
+    throw new NotionIntegrationError(`${envName} is missing. Check Vercel environment variables.`);
+  }
+
+  const normalized = value.replace(/-/g, "");
+  if (!/^[a-f0-9]{32}$/i.test(normalized)) {
+    throw new NotionIntegrationError(
+      `${envName} is invalid (${value}). Expected a 32-character Notion database ID (hex).`,
+    );
+  }
+
+  return value;
+}
+
+const NOTION_API_KEY = normalizeEnvValue(process.env.NOTION_API_KEY);
 const notion = new Client({
-  auth: process.env.NOTION_API_KEY,
+  auth: NOTION_API_KEY || undefined,
 });
 
-const REQUEST_DB_ID = process.env.NOTION_REQUEST_DB_ID || "";
-const SCHEDULE_DB_ID = process.env.NOTION_SCHEDULE_DB_ID || "";
-const PRICING_DB_ID = process.env.NOTION_PRICING_DB_ID || "";
-const QUOTES_DB_ID = process.env.NOTION_QUOTES_DB_ID || "";
+const ACCOUNTING_REQUEST_DB_ID = normalizeDatabaseId(
+  process.env.NOTION_ACCOUNTING_REQUEST_DB_ID || process.env.NOTION_REQUEST_DB_ID,
+);
+const TAX_REQUEST_DB_ID = normalizeDatabaseId(process.env.NOTION_TAX_REQUEST_DB_ID);
+const SCHEDULE_DB_ID = normalizeDatabaseId(process.env.NOTION_SCHEDULE_DB_ID);
+
+const ACCOUNTING_PRICING_DB_ID = normalizeDatabaseId(
+  process.env.NOTION_ACCOUNTING_PRICING_DB_ID || process.env.NOTION_PRICING_DB_ID,
+);
+const TAX_PRICING_DB_ID = normalizeDatabaseId(process.env.NOTION_TAX_PRICING_DB_ID);
+
+const ACCOUNTING_QUOTES_DB_ID = normalizeDatabaseId(
+  process.env.NOTION_ACCOUNTING_QUOTES_DB_ID || process.env.NOTION_QUOTES_DB_ID,
+);
+const TAX_QUOTES_DB_ID = normalizeDatabaseId(process.env.NOTION_TAX_QUOTES_DB_ID);
+
+function getRequestDbIdForService(serviceType: ServiceType): string {
+  if (serviceType === "tax" && TAX_REQUEST_DB_ID) {
+    return requireDatabaseId("NOTION_TAX_REQUEST_DB_ID", TAX_REQUEST_DB_ID);
+  }
+
+  if (serviceType === "tax") {
+    return requireDatabaseId("NOTION_ACCOUNTING_REQUEST_DB_ID", ACCOUNTING_REQUEST_DB_ID);
+  }
+
+  return requireDatabaseId("NOTION_ACCOUNTING_REQUEST_DB_ID", ACCOUNTING_REQUEST_DB_ID);
+}
+
+function getReadableRequestDatabases(): Array<{ id: string; envName: string; fallbackServiceType: ServiceType }> {
+  const databases: Array<{ id: string; envName: string; fallbackServiceType: ServiceType }> = [];
+  const accountingId = requireDatabaseId("NOTION_ACCOUNTING_REQUEST_DB_ID", ACCOUNTING_REQUEST_DB_ID);
+  databases.push({ id: accountingId, envName: "NOTION_ACCOUNTING_REQUEST_DB_ID", fallbackServiceType: "accounting" });
+
+  if (TAX_REQUEST_DB_ID) {
+    const taxId = requireDatabaseId("NOTION_TAX_REQUEST_DB_ID", TAX_REQUEST_DB_ID);
+    if (taxId !== accountingId) {
+      databases.push({ id: taxId, envName: "NOTION_TAX_REQUEST_DB_ID", fallbackServiceType: "tax" });
+    }
+  }
+
+  return databases;
+}
+
+function getPricingDbIdForService(serviceType: ServiceType): string {
+  if (serviceType === "tax" && TAX_PRICING_DB_ID) {
+    return requireDatabaseId("NOTION_TAX_PRICING_DB_ID", TAX_PRICING_DB_ID);
+  }
+
+  return requireDatabaseId("NOTION_ACCOUNTING_PRICING_DB_ID", ACCOUNTING_PRICING_DB_ID);
+}
+
+function getQuotesDbIdForService(serviceType: ServiceType): string {
+  if (serviceType === "tax" && TAX_QUOTES_DB_ID) {
+    return requireDatabaseId("NOTION_TAX_QUOTES_DB_ID", TAX_QUOTES_DB_ID);
+  }
+
+  return requireDatabaseId("NOTION_ACCOUNTING_QUOTES_DB_ID", ACCOUNTING_QUOTES_DB_ID);
+}
 
 function getPlainText(property: any): string {
   if (!property) return "";
@@ -71,11 +176,16 @@ function getRelation(property: any): string | undefined {
   return property.relation[0].id;
 }
 
-function parseRequest(page: any): NotionConsultationRequest {
+function parseRequest(page: any, fallbackServiceType: ServiceType = "accounting"): NotionConsultationRequest {
   const props = page.properties;
   const submissionComplete = getFormula(props["접수 완료 여부"]);
   const serviceTypeRaw = getSelect(props["서비스 유형"] || props["Service Type"]);
-  const serviceType: ServiceType = serviceTypeRaw === "일반세무기장" ? "tax" : "accounting";
+  const serviceType: ServiceType =
+    serviceTypeRaw === "일반세무기장"
+      ? "tax"
+      : serviceTypeRaw === "경리아웃소싱"
+      ? "accounting"
+      : fallbackServiceType;
   return {
     id: page.id,
     serviceType,
@@ -142,29 +252,42 @@ function parsePricing(page: any): NotionPricingEntry {
 }
 
 export async function getRequests(): Promise<NotionConsultationRequest[]> {
-  if (!REQUEST_DB_ID) {
-    console.warn("NOTION_REQUEST_DB_ID not set, returning empty list");
-    return [];
-  }
+  assertNotionConfig();
+  const requestDatabases = getReadableRequestDatabases();
   try {
-    const response = await notion.databases.query({
-      database_id: REQUEST_DB_ID,
-      page_size: 100,
-    });
-    return response.results.map((page: any) => parseRequest(page));
-  } catch (error: any) {
-    console.error("Error fetching requests from Notion:", error?.message || error);
-    return [];
+    const allRequests: NotionConsultationRequest[] = [];
+    const seenPageIds = new Set<string>();
+
+    for (const db of requestDatabases) {
+      const response = await notion.databases.query({
+        database_id: db.id,
+        page_size: 100,
+      });
+
+      for (const page of response.results as any[]) {
+        if (seenPageIds.has(page.id)) continue;
+        seenPageIds.add(page.id);
+        allRequests.push(parseRequest(page, db.fallbackServiceType));
+      }
+    }
+
+    return allRequests;
+  } catch (error: unknown) {
+    throw toNotionError("Failed to fetch requests from Notion", error);
   }
 }
 
 export async function getRequestById(id: string): Promise<NotionConsultationRequest | null> {
+  assertNotionConfig();
   try {
     const page = await notion.pages.retrieve({ page_id: id });
     return parseRequest(page);
-  } catch (error: any) {
-    console.error("Error fetching request:", error?.message || error);
-    return null;
+  } catch (error: unknown) {
+    const message = getErrorMessage(error).toLowerCase();
+    if (message.includes("could not find page")) {
+      return null;
+    }
+    throw toNotionError("Failed to fetch request from Notion", error);
   }
 }
 
@@ -265,11 +388,10 @@ export async function createRequest(data: {
   availableTime?: string;
   specificRequest?: string;
   serviceType: string;
-}): Promise<string | null> {
-  if (!REQUEST_DB_ID) {
-    console.warn("NOTION_REQUEST_DB_ID not set, skipping");
-    return null;
-  }
+}): Promise<string> {
+  assertNotionConfig();
+  const serviceType = data.serviceType === "tax" ? "tax" : "accounting";
+  const requestDbId = getRequestDbIdForService(serviceType);
   try {
     const properties: any = {
       "회사명/담당자/연락처": {
@@ -336,37 +458,40 @@ export async function createRequest(data: {
     }
 
     const response = await notion.pages.create({
-      parent: { database_id: REQUEST_DB_ID },
+      parent: { database_id: requestDbId },
       properties,
     });
     return response.id;
-  } catch (error: any) {
-    console.error("Error creating request in Notion:", error?.message || error);
-    return null;
+  } catch (error: unknown) {
+    throw toNotionError("Failed to create request in Notion", error);
   }
 }
 
 export async function getSchedules(): Promise<NotionConsultationSchedule[]> {
-  if (!SCHEDULE_DB_ID) return [];
+  assertNotionConfig();
+  const scheduleDbId = requireDatabaseId("NOTION_SCHEDULE_DB_ID", SCHEDULE_DB_ID);
   try {
     const response = await notion.databases.query({
-      database_id: SCHEDULE_DB_ID,
+      database_id: scheduleDbId,
       page_size: 100,
     });
     return response.results.map((page: any) => parseSchedule(page));
-  } catch (error: any) {
-    console.error("Error fetching schedules from Notion:", error?.message || error);
-    return [];
+  } catch (error: unknown) {
+    throw toNotionError("Failed to fetch schedules from Notion", error);
   }
 }
 
 export async function getScheduleById(id: string): Promise<NotionConsultationSchedule | null> {
+  assertNotionConfig();
   try {
     const page = await notion.pages.retrieve({ page_id: id });
     return parseSchedule(page);
-  } catch (error: any) {
-    console.error("Error fetching schedule:", error?.message || error);
-    return null;
+  } catch (error: unknown) {
+    const message = getErrorMessage(error).toLowerCase();
+    if (message.includes("could not find page")) {
+      return null;
+    }
+    throw toNotionError("Failed to fetch schedule from Notion", error);
   }
 }
 
@@ -426,11 +551,9 @@ export async function createSchedule(data: {
   scheduledAt: string;
   serviceType: string;
   requestId?: string;
-}): Promise<string | null> {
-  if (!SCHEDULE_DB_ID) {
-    console.warn("NOTION_SCHEDULE_DB_ID not set, skipping");
-    return null;
-  }
+}): Promise<string> {
+  assertNotionConfig();
+  const scheduleDbId = requireDatabaseId("NOTION_SCHEDULE_DB_ID", SCHEDULE_DB_ID);
   try {
     const properties: any = {
       "상담 일시": {
@@ -451,23 +574,23 @@ export async function createSchedule(data: {
     }
 
     const response = await notion.pages.create({
-      parent: { database_id: SCHEDULE_DB_ID },
+      parent: { database_id: scheduleDbId },
       properties,
     });
     return response.id;
-  } catch (error: any) {
-    console.error("Error creating schedule in Notion:", error?.message || error);
-    return null;
+  } catch (error: unknown) {
+    throw toNotionError("Failed to create schedule in Notion", error);
   }
 }
 
 export async function getTodaySchedules(): Promise<NotionConsultationSchedule[]> {
-  if (!SCHEDULE_DB_ID) return [];
+  assertNotionConfig();
+  const scheduleDbId = requireDatabaseId("NOTION_SCHEDULE_DB_ID", SCHEDULE_DB_ID);
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
   try {
     const response = await notion.databases.query({
-      database_id: SCHEDULE_DB_ID,
+      database_id: scheduleDbId,
       page_size: 20,
     });
     const all = response.results.map((page: any) => parseSchedule(page));
@@ -475,17 +598,17 @@ export async function getTodaySchedules(): Promise<NotionConsultationSchedule[]>
       if (!s.scheduledAt) return false;
       return s.scheduledAt.startsWith(todayStr);
     });
-  } catch (error: any) {
-    console.error("Error fetching today's schedules:", error?.message || error);
-    return [];
+  } catch (error: unknown) {
+    throw toNotionError("Failed to fetch today's schedules from Notion", error);
   }
 }
 
 export async function getBookedSlots(dateStr: string): Promise<string[]> {
-  if (!SCHEDULE_DB_ID) return [];
+  assertNotionConfig();
+  const scheduleDbId = requireDatabaseId("NOTION_SCHEDULE_DB_ID", SCHEDULE_DB_ID);
   try {
     const response = await notion.databases.query({
-      database_id: SCHEDULE_DB_ID,
+      database_id: scheduleDbId,
       page_size: 100,
     });
     const all = response.results.map((page: any) => parseSchedule(page));
@@ -499,26 +622,26 @@ export async function getBookedSlots(dateStr: string): Promise<string[]> {
         const d = new Date(s.scheduledAt);
         return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
       });
-  } catch (error: any) {
-    console.error("Error fetching booked slots:", error?.message || error);
-    return [];
+  } catch (error: unknown) {
+    throw toNotionError("Failed to fetch booked slots from Notion", error);
   }
 }
 
 export async function getPricing(): Promise<NotionPricingEntry[]> {
-  if (!PRICING_DB_ID) {
-    console.warn("NOTION_PRICING_DB_ID not set");
-    return [];
-  }
+  return getPricingByService("accounting");
+}
+
+export async function getPricingByService(serviceType: ServiceType): Promise<NotionPricingEntry[]> {
+  assertNotionConfig();
+  const pricingDbId = getPricingDbIdForService(serviceType);
   try {
     const response = await notion.databases.query({
-      database_id: PRICING_DB_ID,
+      database_id: pricingDbId,
       page_size: 20,
     });
     return response.results.map((page: any) => parsePricing(page));
-  } catch (error: any) {
-    console.error("Error fetching pricing from Notion:", error?.message || error);
-    return [];
+  } catch (error: unknown) {
+    throw toNotionError("Failed to fetch pricing from Notion", error);
   }
 }
 
@@ -532,11 +655,11 @@ export async function createQuoteInNotion(data: {
   additionalNotes?: string;
   calculationBasis?: string;
   requestId?: string;
-}): Promise<string | null> {
-  if (!QUOTES_DB_ID) {
-    console.warn("NOTION_QUOTES_DB_ID not set, skipping Notion write");
-    return null;
-  }
+  serviceType?: ServiceType;
+}): Promise<string> {
+  assertNotionConfig();
+  const serviceType = data.serviceType === "tax" ? "tax" : "accounting";
+  const quotesDbId = getQuotesDbIdForService(serviceType);
   try {
     const properties: any = {
       "견적 제목": {
@@ -578,14 +701,13 @@ export async function createQuoteInNotion(data: {
     }
 
     const response = await notion.pages.create({
-      parent: { database_id: QUOTES_DB_ID },
+      parent: { database_id: quotesDbId },
       properties,
     });
 
     return response.id;
-  } catch (error: any) {
-    console.error("Error creating quote in Notion:", error?.message || error);
-    return null;
+  } catch (error: unknown) {
+    throw toNotionError("Failed to create quote in Notion", error);
   }
 }
 
@@ -603,13 +725,13 @@ export async function archiveNotionPage(pageId: string): Promise<boolean> {
 }
 
 export async function discoverDatabaseProperties(dbId?: string): Promise<any> {
-  const targetId = dbId || SCHEDULE_DB_ID;
-  if (!targetId) return null;
+  assertNotionConfig();
+  const targetId = normalizeDatabaseId(dbId) || requireDatabaseId("NOTION_SCHEDULE_DB_ID", SCHEDULE_DB_ID);
+  const validatedDbId = requireDatabaseId("NOTION_DEBUG_DB_ID", targetId);
   try {
-    const db: any = await notion.databases.retrieve({ database_id: targetId });
+    const db: any = await notion.databases.retrieve({ database_id: validatedDbId });
     return db.properties;
-  } catch (error: any) {
-    console.error("Error discovering database:", error?.message || error);
-    return null;
+  } catch (error: unknown) {
+    throw toNotionError("Failed to discover Notion database properties", error);
   }
 }

@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Users, CheckCircle, CalendarDays, ArrowRight, TrendingUp, BookOpen, Calculator } from "lucide-react";
+import { AlertCircle, FileText, Users, CheckCircle, CalendarDays, ArrowRight, TrendingUp, BookOpen, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { formatDate, formatDateTime, getStatusColor, getServiceTypeLabel, getServiceTypeColor } from "@/lib/format";
 import type { DashboardStats, NotionConsultationRequest, NotionConsultationSchedule } from "@shared/schema";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const statConfigs = [
   {
@@ -67,20 +68,52 @@ function StatCard({ title, value, icon: Icon, gradient, iconBg, loading }: {
 }
 
 export default function Dashboard() {
-  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
+  const statsQuery = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
   });
 
-  const { data: recentRequests, isLoading: requestsLoading } = useQuery<NotionConsultationRequest[]>({
+  const recentRequestsQuery = useQuery<NotionConsultationRequest[]>({
     queryKey: ["/api/requests", "recent"],
   });
 
-  const { data: todaySchedules, isLoading: schedulesLoading } = useQuery<NotionConsultationSchedule[]>({
+  const todaySchedulesQuery = useQuery<NotionConsultationSchedule[]>({
     queryKey: ["/api/schedules", "today"],
   });
 
+  const stats = statsQuery.data;
+  const recentRequests = recentRequestsQuery.data;
+  const todaySchedules = todaySchedulesQuery.data;
+  const statsLoading = statsQuery.isLoading;
+  const requestsLoading = recentRequestsQuery.isLoading;
+  const schedulesLoading = todaySchedulesQuery.isLoading;
+  const hasNotionError = statsQuery.isError || recentRequestsQuery.isError || todaySchedulesQuery.isError;
+  const notionError =
+    (statsQuery.error as Error | null) ||
+    (recentRequestsQuery.error as Error | null) ||
+    (todaySchedulesQuery.error as Error | null);
+  const retryNotionQueries = () => {
+    statsQuery.refetch();
+    recentRequestsQuery.refetch();
+    todaySchedulesQuery.refetch();
+  };
+
   return (
     <div className="flex flex-col gap-6 p-6">
+      {hasNotionError && (
+        <Alert variant="destructive" data-testid="alert-notion-error-dashboard">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Notion 연동 오류</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>{notionError?.message || "Notion에서 데이터를 불러오지 못했습니다. 설정을 확인해주세요."}</p>
+            <div>
+              <Button size="sm" variant="outline" onClick={retryNotionQueries} data-testid="button-retry-notion-dashboard">
+                다시 시도
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="rounded-md bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-800 dark:via-blue-800 dark:to-cyan-700 p-6 text-white">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex flex-col gap-2">

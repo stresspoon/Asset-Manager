@@ -5,10 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, FileText } from "lucide-react";
+import { Search, Filter, FileText, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 import { formatDate, getStatusColor, getServiceTypeLabel, getServiceTypeColor } from "@/lib/format";
 import type { NotionConsultationRequest } from "@shared/schema";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export default function Requests() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,9 +18,10 @@ export default function Requests() {
   const [businessTypeFilter, setBusinessTypeFilter] = useState("all");
   const [serviceTypeFilter, setServiceTypeFilter] = useState("all");
 
-  const { data: requests, isLoading } = useQuery<NotionConsultationRequest[]>({
+  const requestsQuery = useQuery<NotionConsultationRequest[]>({
     queryKey: ["/api/requests"],
   });
+  const { data: requests, isLoading, isError, error, refetch } = requestsQuery;
 
   const filtered = (requests || []).filter((req) => {
     const matchSearch = !searchTerm || req.companyContact.toLowerCase().includes(searchTerm.toLowerCase());
@@ -34,6 +37,21 @@ export default function Requests() {
         <h1 className="text-lg font-bold" data-testid="text-page-title">상담 신청 목록</h1>
         <p className="text-sm text-muted-foreground mt-0.5">고객의 상담 신청을 조회하고 관리합니다.</p>
       </div>
+
+      {isError && (
+        <Alert variant="destructive" data-testid="alert-notion-error-requests">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Notion 연동 오류</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>{(error as Error)?.message || "상담 신청 목록을 불러오지 못했습니다."}</p>
+            <div>
+              <Button size="sm" variant="outline" onClick={() => refetch()} data-testid="button-retry-notion-requests">
+                다시 시도
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">

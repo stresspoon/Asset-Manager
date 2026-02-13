@@ -55,6 +55,16 @@ function formatPhoneNumber(value: string): string {
   return `${nums.slice(0, 3)}-${nums.slice(3, 7)}-${nums.slice(7, 11)}`;
 }
 
+function resolveMutationErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return "상담 신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+}
+
 const ACCOUNTING_SERVICES = [
   "급여계산/4대보험 신고/급여명세서 발송",
   "세금계산서/현금영수증 발행",
@@ -601,6 +611,7 @@ export default function ConsultForm() {
       setSubmitted(true);
     },
   });
+  const submitErrorMessage = resolveMutationErrorMessage(submitMutation.error);
 
   const canProceedStep1 = formData.companyContact && formData.phone && formData.businessType && formData.industry && formData.annualRevenue;
   const canProceedStep3 = formData.scheduledDate && formData.scheduledTime;
@@ -727,7 +738,7 @@ export default function ConsultForm() {
 
             {submitMutation.isError && (
               <p className="text-xs text-red-500 mt-2 text-center">
-                상담 신청 중 오류가 발생했습니다. 다시 시도해주세요.
+                {submitErrorMessage}
               </p>
             )}
           </CardContent>

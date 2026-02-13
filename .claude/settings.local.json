@@ -19,7 +19,28 @@
       "Bash(git -C /Users/designers/Projects/Asset-Manager log --oneline -5)",
       "Bash(git add:*)",
       "Bash(git -C /Users/designers/Projects/Asset-Manager commit -m \"$\\(cat <<''EOF''\nPrepare project for Vercel deployment\n\n- Isolate Replit plugins behind REPL_ID check in vite.config.ts\n- Add api/index.ts as Vercel serverless entry point \\(Express wrapper\\)\n- Split setupRoutes from registerRoutes for serverless compatibility\n- Optimize DB connection for serverless \\(SSL + max:1 in production\\)\n- Add vercel.json with build config and API rewrite rules\n- Add build:vercel script for frontend-only Vite build\n- Add .env.example documenting required environment variables\n- Update .gitignore with .env and .env.local\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git -C /Users/designers/Projects/Asset-Manager status -s)"
+      "Bash(git -C /Users/designers/Projects/Asset-Manager status -s)",
+      "Bash(git push:*)",
+      "Bash(git -C /Users/designers/Projects/Asset-Manager log --oneline -1)",
+      "Bash(vercel link:*)",
+      "Bash(supabase --version:*)",
+      "Bash(supabase projects list:*)",
+      "Bash(vercel whoami:*)",
+      "Bash(vercel teams list:*)",
+      "Bash(vercel logout:*)",
+      "Bash(vercel login:*)",
+      "Bash(vercel env ls:*)",
+      "Bash(ls:*)",
+      "Bash(vercel env add:*)",
+      "Bash(vercel env pull:*)",
+      "Bash(vercel ls:*)",
+      "Bash(curl:*)",
+      "Bash(vercel curl \"https://asset-manager-1zcvm2go5-project2s-projects-e3c3b927.vercel.app/api/dashboard/stats\")",
+      "Bash(vercel inspect:*)",
+      "Bash(vercel logs:*)",
+      "Bash(vercel:*)",
+      "Bash(git commit:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
