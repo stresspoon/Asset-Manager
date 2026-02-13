@@ -8,7 +8,7 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
-    "build:vercel": "vite build",
+    "build:vercel": "tsx script/build-vercel.ts",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
