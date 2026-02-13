@@ -726,11 +726,17 @@ export async function archiveNotionPage(pageId: string): Promise<boolean> {
 
 export async function discoverDatabaseProperties(dbId?: string): Promise<any> {
   assertNotionConfig();
-  const targetId = normalizeDatabaseId(dbId) || requireDatabaseId("NOTION_SCHEDULE_DB_ID", SCHEDULE_DB_ID);
-  const validatedDbId = requireDatabaseId("NOTION_DEBUG_DB_ID", targetId);
+  const targetId = dbId ? normalizeDatabaseId(dbId) : ACCOUNTING_REQUEST_DB_ID;
+  if (!targetId) {
+    throw new NotionIntegrationError("No database ID provided or configured.");
+  }
   try {
-    const db: any = await notion.databases.retrieve({ database_id: validatedDbId });
-    return db.properties;
+    const db: any = await notion.databases.retrieve({ database_id: targetId });
+    const result: Record<string, string> = {};
+    for (const [name, prop] of Object.entries(db.properties as Record<string, any>)) {
+      result[name] = prop.type;
+    }
+    return result;
   } catch (error: unknown) {
     throw toNotionError("Failed to discover Notion database properties", error);
   }
