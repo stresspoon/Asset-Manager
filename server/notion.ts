@@ -207,7 +207,7 @@ function parseRequest(page: any, fallbackServiceType: ServiceType = "accounting"
     desiredServices: getMultiSelect(props["원하는 서비스"] || props["Desired Services"]),
     platformSettlement: getMultiSelect(props["온라인 플랫폼 정산"] || props["Platform Settlement"]),
     availableTime: getSelect(props["상담 가능 시간대"] || props["Available Time"]) || getPlainText(props["상담 가능 시간대"]),
-    specificRequest: getPlainText(props["구체적 요청사항"] || props["Specific Request"]),
+    specificRequest: getPlainText(props["구체적"] || props["Specific Request"]),
     submittedAt: getDate(props["제출일시"] || props["Created"]) || page.created_time || "",
     consultationStatus: (getStatus(props["상담 상태"] || props["Status"] || props["상태"]) || "신규접수") as any,
     scheduleId: getRelation(props["상담 일정"] || props["Schedule"]),
@@ -348,7 +348,7 @@ export async function updateRequestFields(id: string, fields: Record<string, any
       properties["카드 개수"] = { number: Number(fields.cardCount) };
     }
     if (fields.specificRequest !== undefined) {
-      properties["구체적 요청사항"] = {
+      properties["구체적"] = {
         rich_text: [{ text: { content: fields.specificRequest.substring(0, 2000) } }],
       };
     }
@@ -404,11 +404,6 @@ export async function createRequest(data: {
       "예약 완료 여부": { checkbox: true },
     };
 
-    if (data.phone) {
-      properties["전화번호"] = {
-        rich_text: [{ text: { content: data.phone } }],
-      };
-    }
     if (data.monthlyVolume) {
       properties["월 거래량/세금계산서"] = { select: { name: data.monthlyVolume } };
     }
@@ -452,7 +447,7 @@ export async function createRequest(data: {
       };
     }
     if (data.specificRequest) {
-      properties["구체적 요청사항"] = {
+      properties["구체적"] = {
         rich_text: [{ text: { content: data.specificRequest.substring(0, 2000) } }],
       };
     }
