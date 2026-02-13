@@ -726,11 +726,21 @@ export async function archiveNotionPage(pageId: string): Promise<boolean> {
   }
 }
 
+const DB_NAME_MAP: Record<string, string> = {
+  accounting: ACCOUNTING_REQUEST_DB_ID,
+  tax: TAX_REQUEST_DB_ID,
+  schedule: SCHEDULE_DB_ID,
+  "accounting-pricing": ACCOUNTING_PRICING_DB_ID,
+  "tax-pricing": TAX_PRICING_DB_ID,
+  "accounting-quotes": ACCOUNTING_QUOTES_DB_ID,
+  "tax-quotes": TAX_QUOTES_DB_ID,
+};
+
 export async function discoverDatabaseProperties(dbId?: string): Promise<any> {
   assertNotionConfig();
-  const targetId = dbId ? normalizeDatabaseId(dbId) : ACCOUNTING_REQUEST_DB_ID;
+  const targetId = (dbId && DB_NAME_MAP[dbId]) || (dbId ? normalizeDatabaseId(dbId) : ACCOUNTING_REQUEST_DB_ID);
   if (!targetId) {
-    throw new NotionIntegrationError("No database ID provided or configured.");
+    throw new NotionIntegrationError("No database ID provided or configured. Available: " + Object.keys(DB_NAME_MAP).filter(k => DB_NAME_MAP[k]).join(", "));
   }
   try {
     const db: any = await notion.databases.retrieve({ database_id: targetId });
