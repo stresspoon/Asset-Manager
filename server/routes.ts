@@ -151,11 +151,7 @@ async function getRequestByIdData(id: string): Promise<NotionConsultationRequest
   return sampleRequests.find((r) => r.id === id) || null;
 }
 
-export async function registerRoutes(
-  httpServer: Server,
-  app: Express
-): Promise<Server> {
-
+export async function setupRoutes(app: Express): Promise<void> {
   await storage.seedPricing();
   await storage.seedTaxPricing();
 
@@ -548,5 +544,12 @@ export async function registerRoutes(
     }
   });
 
+}
+
+export async function registerRoutes(
+  httpServer: Server,
+  app: Express
+): Promise<Server> {
+  await setupRoutes(app);
   return httpServer;
 }
