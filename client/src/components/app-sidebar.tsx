@@ -44,13 +44,13 @@ export function AppSidebar() {
             <span className="text-sm font-bold tracking-tight text-sidebar-foreground" data-testid="text-app-title">
               천지세무법인
             </span>
-            <span className="text-[11px] text-sidebar-foreground/60" data-testid="text-app-subtitle">상담 관리 시스템</span>
+            <span className="text-[0.6875rem] text-sidebar-foreground/60" data-testid="text-app-subtitle">상담 관리 시스템</span>
           </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider font-semibold px-5">
+          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[0.625rem] uppercase tracking-wider font-semibold px-5">
             관리자
           </SidebarGroupLabel>
           <SidebarGroupContent className="px-2 mt-1">
@@ -63,8 +63,8 @@ export function AppSidebar() {
                     tooltip={item.title}
                   >
                     <Link href={item.url} data-testid={`link-nav-${item.url.replace("/", "") || "dashboard"}`}>
-                      <item.icon className="h-[18px] w-[18px]" />
-                      <span className="text-[13px] font-medium">{item.title}</span>
+                      <item.icon className="h-[1.125rem] w-[1.125rem]" />
+                      <span className="text-[0.8125rem] font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -74,7 +74,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider font-semibold px-5">
+          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[0.625rem] uppercase tracking-wider font-semibold px-5">
             고객 폼
           </SidebarGroupLabel>
           <SidebarGroupContent className="px-2 mt-1">
@@ -83,8 +83,8 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <a href={item.url} target="_blank" rel="noopener noreferrer" data-testid={`link-nav-${item.url.split("/").pop()}`}>
-                      <item.icon className="h-[18px] w-[18px]" />
-                      <span className="text-[13px] font-medium">{item.title}</span>
+                      <item.icon className="h-[1.125rem] w-[1.125rem]" />
+                      <span className="text-[0.8125rem] font-medium">{item.title}</span>
                       <ExternalLink className="h-3 w-3 ml-auto text-sidebar-foreground/40" />
                     </a>
                   </SidebarMenuButton>
@@ -96,7 +96,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-4">
         <div className="rounded-md bg-sidebar-accent/50 p-3">
-          <p className="text-[11px] text-sidebar-foreground/50 leading-relaxed" data-testid="text-sidebar-footer">
+          <p className="text-[0.6875rem] text-sidebar-foreground/50 leading-relaxed" data-testid="text-sidebar-footer">
             Powered by Notion API
           </p>
         </div>
