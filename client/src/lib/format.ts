@@ -85,3 +85,9 @@ export function getServiceTypeColor(serviceType: string): string {
 export function getServiceTypeBorderColor(serviceType: string): string {
   return serviceType === "tax" ? "border-blue-500" : "border-yellow-500";
 }
+
+export function getServiceTypeCalendarColor(serviceType: string): string {
+  return serviceType === "tax"
+    ? "bg-blue-500/80 text-white dark:bg-blue-600/80"
+    : "bg-yellow-400/80 text-gray-900 dark:bg-yellow-500/70 dark:text-gray-900";
+}

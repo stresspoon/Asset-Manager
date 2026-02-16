@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDays, List, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
-import { formatDateTime, getStatusColor, getServiceTypeBorderColor, getServiceTypeColor, getServiceTypeLabel } from "@/lib/format";
+import { formatDateTime, getStatusColor, getServiceTypeBorderColor, getServiceTypeColor, getServiceTypeLabel, getServiceTypeCalendarColor } from "@/lib/format";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { NotionConsultationSchedule } from "@shared/schema";
@@ -83,7 +83,7 @@ function CalendarView({ schedules }: { schedules: NotionConsultationSchedule[] }
                       {daySchedules.slice(0, 3).map((s) => (
                         <Link key={s.id} href={`/schedules/${s.id}`}>
                           <div
-                            className={`text-[0.625rem] leading-tight px-1 py-0.5 rounded truncate cursor-pointer border-l-2 ${getServiceTypeBorderColor(s.serviceType)} ${getStatusColor(s.progressStatus)}`}
+                            className={`text-xs leading-tight px-1.5 py-1 rounded truncate cursor-pointer font-medium ${getServiceTypeCalendarColor(s.serviceType)}`}
                             data-testid={`cal-event-${s.id}`}
                           >
                             {new Date(s.scheduledAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} {s.title}

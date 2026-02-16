@@ -602,6 +602,9 @@ export async function createSchedule(data: {
       "진행 상태": {
         status: { name: "예약됨" },
       } as any,
+      "서비스 유형": {
+        select: { name: data.serviceType === "tax" ? "일반세무기장" : "경리아웃소싱" },
+      },
     };
 
     if (data.requestId) {
