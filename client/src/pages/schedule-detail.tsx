@@ -101,7 +101,7 @@ export default function ScheduleDetail() {
           value={schedule.progressStatus}
           onValueChange={(val) => statusMutation.mutate(val)}
         >
-          <SelectTrigger className="w-[100px]" data-testid="select-schedule-status-detail">
+          <SelectTrigger className="w-[6.25rem]" data-testid="select-schedule-status-detail">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -124,15 +124,15 @@ export default function ScheduleDetail() {
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">예약 일시</span>
+              <span className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">예약 일시</span>
               <span className="text-sm">{formatDateTime(schedule.scheduledAt)}</span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">메모</span>
+              <span className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">메모</span>
               <span className="text-sm">{schedule.memo || "-"}</span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">견적 산출 여부</span>
+              <span className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">견적 산출 여부</span>
               <span className="text-sm">{schedule.quoteGenerated ? "완료" : "미완료"}</span>
             </div>
           </CardContent>
@@ -150,7 +150,7 @@ export default function ScheduleDetail() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="상담 내용, 고객 요구사항, 특이사항, 후속 조치 등을 기록하세요..."
-              className="min-h-[200px] resize-none text-sm"
+              className="min-h-[12.5rem] resize-none text-sm"
               data-testid="textarea-consultation-notes"
             />
             <Button

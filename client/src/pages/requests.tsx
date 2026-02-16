@@ -66,7 +66,7 @@ export default function Requests() {
         </div>
         <div className="flex gap-2 flex-wrap">
           <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
-            <SelectTrigger className="w-[140px]" data-testid="select-service-filter">
+            <SelectTrigger className="w-[8.75rem]" data-testid="select-service-filter">
               <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
               <SelectValue placeholder="서비스" />
             </SelectTrigger>
@@ -77,7 +77,7 @@ export default function Requests() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[130px]" data-testid="select-status-filter">
+            <SelectTrigger className="w-[8.125rem]" data-testid="select-status-filter">
               <SelectValue placeholder="상태" />
             </SelectTrigger>
             <SelectContent>
@@ -88,7 +88,7 @@ export default function Requests() {
             </SelectContent>
           </Select>
           <Select value={businessTypeFilter} onValueChange={setBusinessTypeFilter}>
-            <SelectTrigger className="w-[140px]" data-testid="select-type-filter">
+            <SelectTrigger className="w-[8.75rem]" data-testid="select-type-filter">
               <SelectValue placeholder="사업자 유형" />
             </SelectTrigger>
             <SelectContent>
@@ -126,7 +126,7 @@ export default function Requests() {
                         <span className="text-sm font-semibold truncate" data-testid={`text-company-${req.id}`}>
                           {req.companyContact}
                         </span>
-                        <Badge variant="secondary" className={`text-[10px] shrink-0 ${getServiceTypeColor(req.serviceType)}`}>
+                        <Badge variant="secondary" className={`text-[0.625rem] shrink-0 ${getServiceTypeColor(req.serviceType)}`}>
                           {getServiceTypeLabel(req.serviceType)}
                         </Badge>
                         <Badge variant="outline" className="text-xs shrink-0">

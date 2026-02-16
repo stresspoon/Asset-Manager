@@ -201,7 +201,7 @@ export default function QuoteDetail() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">서비스 등급</Label>
+              <Label className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">서비스 등급</Label>
               {isTax ? (
                 <Badge className={getTierColor("TAX")}>{getTierLabel("TAX")}</Badge>
               ) : (
@@ -220,7 +220,7 @@ export default function QuoteDetail() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">
+              <Label className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">
                 {isTax ? "월 기장료 (원)" : "월 기본료 (원)"}
               </Label>
               <Input
@@ -246,7 +246,7 @@ export default function QuoteDetail() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">할인율 (%)</Label>
+                  <Label className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">할인율 (%)</Label>
                   <Input
                     type="number"
                     value={discountRate}
@@ -269,12 +269,12 @@ export default function QuoteDetail() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">추가 옵션 설명</Label>
+              <Label className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">추가 옵션 설명</Label>
               <Textarea
                 value={additionalNotes}
                 onChange={(e) => setAdditionalNotes(e.target.value)}
                 placeholder="카드 수 추가, 플랫폼 정산 등 별도 안내..."
-                className="resize-none min-h-[100px] text-sm"
+                className="resize-none min-h-[6.25rem] text-sm"
                 data-testid="textarea-additional-notes"
               />
             </div>
@@ -317,7 +317,7 @@ export default function QuoteDetail() {
               <>
                 <Separator />
                 <div className="rounded-md bg-muted/50 p-3">
-                  <span className="text-[11px] text-muted-foreground font-medium block mb-1 uppercase tracking-wide">산출 근거</span>
+                  <span className="text-[0.6875rem] text-muted-foreground font-medium block mb-1 uppercase tracking-wide">산출 근거</span>
                   <p className="text-xs text-muted-foreground leading-relaxed">{quote.calculationBasis}</p>
                 </div>
               </>

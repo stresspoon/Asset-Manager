@@ -196,7 +196,7 @@ export default function Dashboard() {
                     <div className="flex flex-col gap-0.5 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium truncate">{req.companyContact}</span>
-                        <Badge variant="secondary" className={`text-[10px] ${getServiceTypeColor(req.serviceType)}`}>
+                        <Badge variant="secondary" className={`text-[0.625rem] ${getServiceTypeColor(req.serviceType)}`}>
                           {getServiceTypeLabel(req.serviceType)}
                         </Badge>
                       </div>

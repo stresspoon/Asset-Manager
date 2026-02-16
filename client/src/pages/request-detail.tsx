@@ -27,7 +27,7 @@ function InfoRow({ label, value, editMode, editValue, onEditChange, inputType = 
 }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</span>
+      <span className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">{label}</span>
       {editMode && onEditChange ? (
         <Input
           type={inputType}
@@ -256,7 +256,7 @@ export default function RequestDetail() {
             value={request.consultationStatus}
             onValueChange={(val) => statusMutation.mutate(val)}
           >
-            <SelectTrigger className="w-[120px]" data-testid="select-change-status">
+            <SelectTrigger className="w-[7.5rem]" data-testid="select-change-status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -377,17 +377,17 @@ export default function RequestDetail() {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div>
-                <span className="text-[11px] text-muted-foreground font-medium mb-1 block uppercase tracking-wide">지금 가장 급한 문제</span>
+                <span className="text-[0.6875rem] text-muted-foreground font-medium mb-1 block uppercase tracking-wide">지금 가장 급한 문제</span>
                 <TagList items={request.urgentIssues} />
               </div>
               <Separator />
               {editMode ? (
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">이번 달 해결 과제</Label>
+                  <Label className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">이번 달 해결 과제</Label>
                   <Textarea
                     value={editData.monthlyTask || ""}
                     onChange={(e) => setEditData({ ...editData, monthlyTask: e.target.value })}
-                    className="min-h-[60px] text-sm resize-none"
+                    className="min-h-[3.75rem] text-sm resize-none"
                     data-testid="textarea-edit-monthly-task"
                   />
                 </div>
@@ -396,14 +396,14 @@ export default function RequestDetail() {
               )}
               <Separator />
               <div>
-                <span className="text-[11px] text-muted-foreground font-medium mb-1 block uppercase tracking-wide">원하는 서비스</span>
+                <span className="text-[0.6875rem] text-muted-foreground font-medium mb-1 block uppercase tracking-wide">원하는 서비스</span>
                 <TagList items={request.desiredServices} />
               </div>
               {!isTax && (
                 <>
                   <Separator />
                   <div>
-                    <span className="text-[11px] text-muted-foreground font-medium mb-1 block uppercase tracking-wide">온라인 플랫폼 정산</span>
+                    <span className="text-[0.6875rem] text-muted-foreground font-medium mb-1 block uppercase tracking-wide">온라인 플랫폼 정산</span>
                     <TagList items={request.platformSettlement} />
                   </div>
                 </>
@@ -411,11 +411,11 @@ export default function RequestDetail() {
               <Separator />
               {editMode ? (
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">구체적 요청사항</Label>
+                  <Label className="text-[0.6875rem] text-muted-foreground font-medium uppercase tracking-wide">구체적 요청사항</Label>
                   <Textarea
                     value={editData.specificRequest || ""}
                     onChange={(e) => setEditData({ ...editData, specificRequest: e.target.value })}
-                    className="min-h-[60px] text-sm resize-none"
+                    className="min-h-[3.75rem] text-sm resize-none"
                     data-testid="textarea-edit-specific-request"
                   />
                 </div>
@@ -487,7 +487,7 @@ export default function RequestDetail() {
                   )}
 
                   <div className="rounded-md bg-muted/50 p-3 mt-1">
-                    <span className="text-[11px] text-muted-foreground font-medium block mb-1 uppercase tracking-wide">산출 근거</span>
+                    <span className="text-[0.6875rem] text-muted-foreground font-medium block mb-1 uppercase tracking-wide">산출 근거</span>
                     <p className="text-xs text-muted-foreground leading-relaxed" data-testid="text-calculation-basis">
                       {autoQuote.calculationBasis}
                     </p>

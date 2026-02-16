@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDays, List, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
-import { formatDateTime, getStatusColor } from "@/lib/format";
+import { formatDateTime, getStatusColor, getServiceTypeBorderColor, getServiceTypeColor, getServiceTypeLabel } from "@/lib/format";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { NotionConsultationSchedule } from "@shared/schema";
@@ -70,7 +70,7 @@ function CalendarView({ schedules }: { schedules: NotionConsultationSchedule[] }
             return (
               <div
                 key={idx}
-                className={`bg-card min-h-[80px] sm:min-h-[100px] p-1.5 ${
+                className={`bg-card min-h-[5rem] sm:min-h-[6.25rem] p-1.5 ${
                   !day ? "bg-muted/20" : ""
                 } ${day && isToday(day) ? "ring-2 ring-primary/40 ring-inset" : ""}`}
               >
@@ -83,7 +83,7 @@ function CalendarView({ schedules }: { schedules: NotionConsultationSchedule[] }
                       {daySchedules.slice(0, 3).map((s) => (
                         <Link key={s.id} href={`/schedules/${s.id}`}>
                           <div
-                            className={`text-[10px] leading-tight px-1 py-0.5 rounded truncate cursor-pointer ${getStatusColor(s.progressStatus)}`}
+                            className={`text-[0.625rem] leading-tight px-1 py-0.5 rounded truncate cursor-pointer border-l-2 ${getServiceTypeBorderColor(s.serviceType)} ${getStatusColor(s.progressStatus)}`}
                             data-testid={`cal-event-${s.id}`}
                           >
                             {new Date(s.scheduledAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} {s.title}
@@ -91,7 +91,7 @@ function CalendarView({ schedules }: { schedules: NotionConsultationSchedule[] }
                         </Link>
                       ))}
                       {daySchedules.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground px-1">+{daySchedules.length - 3}건</span>
+                        <span className="text-[0.625rem] text-muted-foreground px-1">+{daySchedules.length - 3}건</span>
                       )}
                     </div>
                   </>
@@ -140,7 +140,7 @@ export default function Schedules() {
           <p className="text-sm text-muted-foreground mt-0.5">상담 일정을 캘린더 또는 목록으로 확인합니다.</p>
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[120px]" data-testid="select-schedule-status">
+          <SelectTrigger className="w-[7.5rem]" data-testid="select-schedule-status">
             <SelectValue placeholder="상태" />
           </SelectTrigger>
           <SelectContent>
@@ -198,6 +198,9 @@ export default function Schedules() {
                               <span className="text-sm font-semibold truncate" data-testid={`text-schedule-title-${schedule.id}`}>
                                 {schedule.title}
                               </span>
+                              <Badge variant="secondary" className={`shrink-0 ${getServiceTypeColor(schedule.serviceType)}`}>
+                                {getServiceTypeLabel(schedule.serviceType)}
+                              </Badge>
                               <Badge variant="secondary" className={`shrink-0 ${getStatusColor(schedule.progressStatus)}`}>
                                 {schedule.progressStatus}
                               </Badge>
@@ -214,7 +217,7 @@ export default function Schedules() {
                             value={schedule.progressStatus}
                             onValueChange={(val) => statusMutation.mutate({ id: schedule.id, status: val })}
                           >
-                            <SelectTrigger className="w-[100px] shrink-0" data-testid={`select-schedule-status-${schedule.id}`}>
+                            <SelectTrigger className="w-[6.25rem] shrink-0" data-testid={`select-schedule-status-${schedule.id}`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

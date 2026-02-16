@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertQuoteSchema } from "@shared/schema";
 import * as notion from "./notion";
 import { calculateQuote, calculateTaxQuote } from "./quote-engine";
+import { withBookingLock } from "./booking-lock";
 import type { NotionConsultationRequest } from "@shared/schema";
 
 async function getRequestsData(): Promise<NotionConsultationRequest[]> {
@@ -239,56 +240,71 @@ export async function setupRoutes(app: Express): Promise<void> {
       const data = req.body;
       const serviceType = data.serviceType || "accounting";
       const serviceLabel = serviceType === "tax" ? "일반세무기장" : "경리아웃소싱";
+      const lockKey = `${data.scheduledDate}T${data.scheduledTime}`;
 
-      const requestId = await notion.createRequest({
-        companyContact: data.companyContact,
-        phone: data.phone,
-        businessType: data.businessType,
-        industry: data.industry,
-        monthlyVolume: data.monthlyVolume,
-        employeeRevenue: data.employeeRevenue,
-        bankCardCount: data.bankCardCount,
-        cardUsageCount: data.cardUsageCount,
-        cardCount: data.cardCount,
-        taxInvoiceCount: data.taxInvoiceCount,
-        annualRevenue: data.annualRevenue,
-        urgentIssues: data.urgentIssues,
-        monthlyTask: data.monthlyTask,
-        desiredServices: data.desiredServices,
-        platformSettlement: data.platformSettlement,
-        specificRequest: data.specificRequest,
-        serviceType,
-        employeeCount: data.employeeCount,
-        currentAccountingMethod: data.currentAccountingMethod,
-        taxConcerns: data.taxConcerns,
-      });
+      await withBookingLock(lockKey, async () => {
+        // Re-validate slot availability inside lock
+        const bookedTimes = await notion.getBookedSlots(data.scheduledDate);
+        if (bookedTimes.includes(data.scheduledTime)) {
+          res.status(409).json({
+            success: false,
+            message: "해당 시간은 이미 예약되었습니다. 다른 시간을 선택해주세요.",
+          });
+          return;
+        }
 
-      const scheduledDatetime = `${data.scheduledDate}T${data.scheduledTime}:00+09:00`;
-      const title = `${serviceLabel} 상담 - ${data.companyContact?.split("/")[0]?.trim() || "고객"}`;
-
-      const scheduleId = await notion.createSchedule({
-        title,
-        scheduledAt: scheduledDatetime,
-        serviceType,
-        requestId: requestId || undefined,
-      });
-
-      if (!requestId || !scheduleId) {
-        return res.status(502).json({
-          success: false,
-          message: "Notion 연동 오류로 상담 신청을 저장하지 못했습니다.",
-          details: "requestId 또는 scheduleId 생성 실패",
+        const requestId = await notion.createRequest({
+          companyContact: data.companyContact,
+          phone: data.phone,
+          businessType: data.businessType,
+          industry: data.industry,
+          monthlyVolume: data.monthlyVolume,
+          employeeRevenue: data.employeeRevenue,
+          bankCardCount: data.bankCardCount,
+          cardUsageCount: data.cardUsageCount,
+          cardCount: data.cardCount,
+          taxInvoiceCount: data.taxInvoiceCount,
+          annualRevenue: data.annualRevenue,
+          urgentIssues: data.urgentIssues,
+          monthlyTask: data.monthlyTask,
+          desiredServices: data.desiredServices,
+          platformSettlement: data.platformSettlement,
+          specificRequest: data.specificRequest,
+          serviceType,
+          employeeCount: data.employeeCount,
+          currentAccountingMethod: data.currentAccountingMethod,
+          taxConcerns: data.taxConcerns,
         });
-      }
 
-      res.json({
-        success: true,
-        requestId,
-        scheduleId,
-        message: "상담 신청이 완료되었습니다.",
+        const scheduledDatetime = `${data.scheduledDate}T${data.scheduledTime}:00+09:00`;
+        const title = `${serviceLabel} 상담 - ${data.companyContact?.split("/")[0]?.trim() || "고객"}`;
+
+        const scheduleId = await notion.createSchedule({
+          title,
+          scheduledAt: scheduledDatetime,
+          serviceType,
+          requestId: requestId || undefined,
+        });
+
+        if (!requestId || !scheduleId) {
+          res.status(502).json({
+            success: false,
+            message: "Notion 연동 오류로 상담 신청을 저장하지 못했습니다.",
+            details: "requestId 또는 scheduleId 생성 실패",
+          });
+          return;
+        }
+
+        res.json({
+          success: true,
+          requestId,
+          scheduleId,
+          message: "상담 신청이 완료되었습니다.",
+        });
       });
     } catch (error: unknown) {
       console.error("Error submitting consultation:", error);
+      if (res.headersSent) return;
       if (notion.isNotionIntegrationError(error)) {
         return res.status(502).json({
           success: false,

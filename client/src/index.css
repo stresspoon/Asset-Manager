@@ -6,6 +6,7 @@
 
 /* LIGHT MODE */
 :root {
+  font-size: clamp(14px, 0.45vw + 12px, 18px);
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;

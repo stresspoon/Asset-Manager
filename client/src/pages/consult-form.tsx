@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, ArrowRight, ArrowLeft, CalendarDays, CheckCircle2, Clock, Phone } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { ServiceType, ScheduleSlot } from "@shared/schema";
 
 const STORAGE_KEY_PREFIX = "consult_form_";
@@ -415,7 +416,7 @@ function Step2Services({ formData, onChange, serviceType }: StepProps) {
           placeholder={serviceType === "accounting" ? "이번 달 급하게 처리해야 할 업무를 적어주세요..." : "세무 관련 추가 요청사항을 적어주세요..."}
           value={formData.monthlyTask || formData.specificRequest || ""}
           onChange={(e) => onChange(serviceType === "accounting" ? "monthlyTask" : "specificRequest", e.target.value)}
-          className="min-h-[100px] resize-none text-sm"
+          className="min-h-[6.25rem] resize-none text-sm"
           data-testid="textarea-additional-request"
         />
       </div>
@@ -427,7 +428,7 @@ function Step2Services({ formData, onChange, serviceType }: StepProps) {
             placeholder="기타 요청사항이 있으시면 적어주세요..."
             value={formData.specificRequest || ""}
             onChange={(e) => onChange("specificRequest", e.target.value)}
-            className="min-h-[80px] resize-none text-sm"
+            className="min-h-[5rem] resize-none text-sm"
             data-testid="textarea-specific-request"
           />
         </div>
@@ -583,6 +584,7 @@ export default function ConsultForm() {
   const [matchTax] = useRoute("/consult/tax");
   const serviceType: ServiceType = matchTax ? "tax" : "accounting";
   const serviceLabel = serviceType === "accounting" ? "경리아웃소싱" : "일반 세무기장";
+  const { toast } = useToast();
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -616,6 +618,22 @@ export default function ConsultForm() {
     onSuccess: () => {
       clear();
       setSubmitted(true);
+    },
+    onError: (error: Error) => {
+      if (error.message.startsWith("409:")) {
+        toast({
+          title: "해당 시간은 이미 예약되었습니다. 다른 시간을 선택해주세요.",
+          variant: "destructive",
+        });
+        // Clear time selection and re-fetch slots
+        setFormData((prev) => ({ ...prev, scheduledTime: "" }));
+        if (formData.scheduledDate) {
+          queryClient.invalidateQueries({
+            queryKey: ["/api/schedules/available-slots", formData.scheduledDate],
+          });
+        }
+        setStep(3);
+      }
     },
   });
   const submitErrorMessage = resolveMutationErrorMessage(submitMutation.error);
